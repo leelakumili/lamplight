@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { getGreeting, formatStoryAge } from '../lib/utils'
 import type { Setup, Story } from '../types'
@@ -10,10 +10,176 @@ interface HomeProps {
   onTeenEntry: () => void
   onSettings: () => void
   onOpenStory: (story: Story) => void
+  onDeleteStory: (id: string) => void
 }
 
-export function Home({ setup, history, onParentEntry, onTeenEntry, onSettings, onOpenStory }: HomeProps) {
+interface StoryRowProps {
+  story: Story
+  isConfirming: boolean
+  onOpen: () => void
+  onRequestDelete: () => void
+  onConfirmDelete: () => void
+  onCancelDelete: () => void
+}
+
+function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelete, onCancelDelete }: StoryRowProps) {
+  const touchStartX = useRef(0)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const dx = touchStartX.current - e.changedTouches[0].clientX
+    if (dx > 60) onRequestDelete()   // swipe left → reveal delete
+    if (dx < -40) onCancelDelete()   // swipe right → dismiss
+  }
+
+  if (isConfirming) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '10px 14px',
+          borderRadius: 14,
+          backgroundColor: '#fdf0ec',
+          border: '1px solid rgba(163,93,58,0.2)',
+          animation: 'st-fade-in 0.15s ease both',
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            color: '#a35d3a',
+          }}
+        >
+          Delete "{story.title}"?
+        </div>
+        <button
+          onClick={onCancelDelete}
+          style={{
+            height: 34,
+            padding: '0 14px',
+            borderRadius: 10,
+            border: '1px solid #dfd5bd',
+            backgroundColor: '#faf4e8',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            color: '#76705f',
+            cursor: 'pointer',
+          }}
+        >
+          Keep
+        </button>
+        <button
+          onClick={onConfirmDelete}
+          style={{
+            height: 34,
+            padding: '0 14px',
+            borderRadius: 10,
+            border: 'none',
+            backgroundColor: '#a35d3a',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+            color: '#faf4e8',
+            cursor: 'pointer',
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      style={{ position: 'relative', borderRadius: 14, overflow: 'hidden' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <button
+        onClick={onOpen}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          padding: '12px 14px',
+          borderRadius: 14,
+          backgroundColor: '#f3ead8',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 48,
+            borderRadius: 4,
+            background: 'linear-gradient(160deg, #c9924a, #a35d3a)',
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontFamily: "'Newsreader', Georgia, serif",
+              fontSize: 15,
+              color: '#1f1b16',
+              marginBottom: 2,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {story.title}
+          </div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#76705f' }}>
+            {formatStoryAge(story.generatedAt)} · {story.mode} · {story.destination || 'story'}
+          </div>
+        </div>
+        <Icon name="chevron-right" size={16} color="#b2aa97" />
+      </button>
+
+      {/* Delete affordance — tap trash icon */}
+      <button
+        onClick={e => { e.stopPropagation(); onRequestDelete() }}
+        title="Delete story"
+        style={{
+          position: 'absolute',
+          right: 10,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          border: 'none',
+          backgroundColor: 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          opacity: 0,
+          transition: 'opacity 0.15s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
+      >
+        <Icon name="trash" size={15} color="#a35d3a" />
+      </button>
+    </div>
+  )
+}
+
+export function Home({ setup, history, onParentEntry, onTeenEntry, onSettings, onOpenStory, onDeleteStory }: HomeProps) {
   const [greeting, setGreeting] = useState(getGreeting())
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => setGreeting(getGreeting()), 30000)
@@ -261,59 +427,15 @@ export function Home({ setup, history, onParentEntry, onTeenEntry, onSettings, o
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {recentStories.map(story => (
-                <button
+                <StoryRow
                   key={story.id}
-                  onClick={() => onOpenStory(story)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    padding: '12px 14px',
-                    borderRadius: 14,
-                    backgroundColor: '#f3ead8',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  {/* Book spine thumbnail */}
-                  <div
-                    style={{
-                      width: 38,
-                      height: 48,
-                      borderRadius: 4,
-                      background: 'linear-gradient(160deg, #c9924a, #a35d3a)',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontFamily: "'Newsreader', Georgia, serif",
-                        fontSize: 15,
-                        color: '#1f1b16',
-                        fontWeight: 400,
-                        marginBottom: 2,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {story.title}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: 12,
-                        color: '#76705f',
-                      }}
-                    >
-                      {formatStoryAge(story.generatedAt)} · {story.mode} · {story.destination || 'story'}
-                    </div>
-                  </div>
-                  <Icon name="chevron-right" size={16} color="#b2aa97" />
-                </button>
+                  story={story}
+                  isConfirming={deletingId === story.id}
+                  onOpen={() => onOpenStory(story)}
+                  onRequestDelete={() => setDeletingId(story.id)}
+                  onConfirmDelete={() => { onDeleteStory(story.id); setDeletingId(null) }}
+                  onCancelDelete={() => setDeletingId(null)}
+                />
               ))}
             </div>
           </div>

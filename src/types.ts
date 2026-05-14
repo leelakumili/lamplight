@@ -72,3 +72,4 @@ export type AppAction =
   | { type: 'SET_READER_FONT_FAMILY'; family: 'serif' | 'sans' }
   | { type: 'SET_GENERATION_ERROR'; error: string | null }
   | { type: 'LOAD_HISTORY'; stories: Story[] }
+  | { type: 'DELETE_STORY'; id: string }

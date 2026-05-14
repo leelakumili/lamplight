@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useState } from 'react'
 import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
-import { saveSetup, loadSetup, saveStory, loadStories } from './lib/db'
+import { saveSetup, loadSetup, saveStory, loadStories, deleteStory } from './lib/db'
 import { generateStory } from './lib/generateStory'
 import { generateId } from './lib/utils'
 
@@ -67,6 +67,8 @@ function reducer(state: AppState, action: AppAction): AppState {
       return { ...state, generationError: action.error }
     case 'LOAD_HISTORY':
       return { ...state, history: action.stories }
+    case 'DELETE_STORY':
+      return { ...state, history: state.history.filter(s => s.id !== action.id) }
     default:
       return state
   }
@@ -221,6 +223,10 @@ export default function App() {
             onOpenStory={story => {
               dispatch({ type: 'SET_CURRENT_STORY', story })
               nav('reading')
+            }}
+            onDeleteStory={async id => {
+              dispatch({ type: 'DELETE_STORY', id })
+              await deleteStory(id)
             }}
           />
         ) : null

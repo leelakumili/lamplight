@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState, useMemo } from 'react'
+import React, { useReducer, useEffect, useState, useMemo, useRef } from 'react'
 import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
 import { saveSetup, loadSetup, saveStory, loadStories, deleteStory, saveProfiles, loadProfiles, saveActiveProfileId, loadActiveProfileId } from './lib/db'
 import { getStoredTheme, applyTheme, type AppTheme } from './lib/theme'
@@ -103,16 +103,26 @@ function reducer(state: AppState, action: AppAction): AppState {
         : state.currentStory
       return { ...state, history, currentStory }
     }
-    default:
-      return state
+    default: {
+      const _exhaustive: never = action
+      return _exhaustive
+    }
   }
 }
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [loaded, setLoaded] = useState(false)
+  const [dbError, setDbError] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [appTheme, setAppTheme] = useState<AppTheme>(getStoredTheme)
+  // Tracks live story IDs so background illustration tasks can bail if a story was deleted.
+  const historyIdsRef = useRef<Set<string>>(new Set())
+
+  // Keep historyIdsRef in sync so background tasks can check if a story still exists.
+  useEffect(() => {
+    historyIdsRef.current = new Set(state.history.map(s => s.id))
+  }, [state.history])
 
   // Apply theme to <html data-theme="..."> on mount and on change
   useEffect(() => {
@@ -122,21 +132,22 @@ export default function App() {
   // Load persisted data
   useEffect(() => {
     async function init() {
-      const [setup, stories, profiles, activeProfileId] = await Promise.all([
-        loadSetup(), loadStories(), loadProfiles(), loadActiveProfileId(),
-      ])
-      if (setup) {
-        dispatch({ type: 'SET_SETUP', setup })
-        dispatch({ type: 'SET_READER_FONT_SIZE', size: setup.defaultFontSize || 16 })
-        dispatch({ type: 'SET_READER_THEME', theme: setup.defaultTheme || 'midnight' })
-        dispatch({ type: 'SET_READER_FONT_FAMILY', family: setup.defaultFontFamily || 'serif' })
-        dispatch({ type: 'SET_SCREEN', screen: 'home' })
-      }
-      if (stories.length > 0) {
-        dispatch({ type: 'LOAD_HISTORY', stories })
-      }
-      if (profiles.length > 0) {
-        dispatch({ type: 'SET_PROFILES', profiles, activeProfileId })
+      try {
+        const [setup, stories, profiles, activeProfileId] = await Promise.all([
+          loadSetup(), loadStories(), loadProfiles(), loadActiveProfileId(),
+        ])
+        if (setup) {
+          dispatch({ type: 'SET_SETUP', setup })
+          dispatch({ type: 'SET_READER_FONT_SIZE', size: setup.defaultFontSize || 16 })
+          dispatch({ type: 'SET_READER_THEME', theme: setup.defaultTheme || 'midnight' })
+          dispatch({ type: 'SET_READER_FONT_FAMILY', family: setup.defaultFontFamily || 'serif' })
+          dispatch({ type: 'SET_SCREEN', screen: 'home' })
+        }
+        if (stories.length > 0) dispatch({ type: 'LOAD_HISTORY', stories })
+        if (profiles.length > 0) dispatch({ type: 'SET_PROFILES', profiles, activeProfileId })
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('DB init failed:', err)
+        setDbError(true)
       }
       setLoaded(true)
     }
@@ -217,13 +228,23 @@ export default function App() {
       nav('reading')
 
       // Generate illustration in the background — user can read immediately.
-      // When ready, update the story in state and DB.
+      // Aborts after 30s; skips update if the story was deleted before it finishes.
       if (!effectiveSetup.useLocal) {
-        generateIllustration(story, effectiveSetup).then(illustration => {
-          if (!illustration) return
-          dispatch({ type: 'UPDATE_STORY_ILLUSTRATION', id: story.id, illustration })
-          saveStory({ ...story, illustration })
-        }).catch(() => {})
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 30_000)
+        const storyId = story.id
+        generateIllustration(story, effectiveSetup, controller.signal)
+          .then(illustration => {
+            clearTimeout(timeout)
+            if (!illustration) return
+            if (!historyIdsRef.current.has(storyId)) return // story deleted mid-flight
+            dispatch({ type: 'UPDATE_STORY_ILLUSTRATION', id: storyId, illustration })
+            saveStory({ ...story, illustration })
+          })
+          .catch(err => {
+            clearTimeout(timeout)
+            if (import.meta.env.DEV) console.warn('Illustration generation failed:', err)
+          })
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong'
@@ -239,15 +260,26 @@ export default function App() {
 
   if (!loaded) {
     return (
-      <div
-        style={{
-          minHeight: '100dvh',
-          backgroundColor: 'var(--bg)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      />
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+    )
+  }
+
+  if (dbError) {
+    return (
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--serif)', fontSize: 24, color: 'var(--ink)', marginBottom: 12 }}>
+          Couldn't load your data
+        </div>
+        <div style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'var(--ink50)', marginBottom: 32, lineHeight: 1.5 }}>
+          Storage is unavailable — this can happen in private browsing mode. Your stories are safe if you've used the app before.
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{ fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 500, padding: '12px 28px', borderRadius: 14, background: 'var(--cta)', color: 'var(--cta-fg, var(--bg))', border: 'none', cursor: 'pointer' }}
+        >
+          Try again
+        </button>
+      </div>
     )
   }
 

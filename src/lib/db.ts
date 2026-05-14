@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb'
 import type { Setup, Story, Profile } from '../types'
+import { encryptField, decryptField } from './crypto'
 
 let dbPromise: Promise<IDBPDatabase> | null = null
 
@@ -21,14 +22,21 @@ function getDB() {
 
 export async function saveSetup(setup: Setup): Promise<void> {
   const db = await getDB()
-  await db.put('data', setup, 'setup')
+  const toStore = { ...setup, apiKey: await encryptField(setup.apiKey) }
+  await db.put('data', toStore, 'setup')
 }
 
 export async function loadSetup(): Promise<Setup | null> {
   try {
     const db = await getDB()
-    const setup = await db.get('data', 'setup')
-    return setup ?? null
+    const raw = await db.get('data', 'setup')
+    if (!raw) return null
+    const setup: Setup = { ...raw, apiKey: await decryptField(raw.apiKey) }
+    // Migrate legacy plain-text keys: re-save encrypted immediately.
+    if (raw.apiKey && !raw.apiKey.startsWith('enc:')) {
+      await saveSetup(setup)
+    }
+    return setup
   } catch {
     return null
   }

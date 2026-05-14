@@ -110,11 +110,14 @@ export function Reading({
   }
 
   function goToPage(next: number) {
-    if (next < 0 || next > totalPages) return
+    if (next < 0) return
+    if (next >= totalPages) {
+      onDone()
+      return
+    }
     setSlideDir(next > page ? 'left' : 'right')
     setTimeout(() => {
-      setPage(next < totalPages ? next : page)
-      if (next >= totalPages) onDone()
+      setPage(next)
       setSlideDir(null)
     }, 220)
   }

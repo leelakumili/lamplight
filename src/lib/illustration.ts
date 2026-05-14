@@ -1,9 +1,14 @@
 import type { Story, Setup } from '../types'
 import { MODELS, ANTHROPIC_VERSION } from './constants'
 
+function safeDestination(raw: string): string {
+  return raw.replace(/[^a-zA-Z\s]/g, '').trim().slice(0, 40)
+}
+
 function buildDallEPrompt(story: Story): string {
-  const mood = story.destination
-    ? `evoking "${story.destination}"`
+  const dest = safeDestination(story.destination)
+  const mood = dest
+    ? `evoking a feeling of "${dest}"`
     : story.mode === 'teen' ? 'wonder and quiet discovery' : 'warmth and gentle resolution'
   return (
     `Soft, dreamy watercolor illustration for a teen bedtime story titled "${story.title}", ` +
@@ -32,11 +37,12 @@ async function urlToDataURI(url: string): Promise<string> {
   })
 }
 
-async function generateWithDallE(story: Story, apiKey: string): Promise<string | null> {
+async function generateWithDallE(story: Story, apiKey: string, signal: AbortSignal): Promise<string | null> {
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: MODELS.openaiImage, prompt: buildDallEPrompt(story), n: 1, size: '1024x1024', quality: 'standard' }),
+    signal,
   })
   if (!res.ok) return null
   const data = await res.json() as { data: Array<{ url: string }> }
@@ -45,7 +51,7 @@ async function generateWithDallE(story: Story, apiKey: string): Promise<string |
   return urlToDataURI(url)
 }
 
-async function generateWithClaudeSVG(story: Story, apiKey: string): Promise<string | null> {
+async function generateWithClaudeSVG(story: Story, apiKey: string, signal: AbortSignal): Promise<string | null> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -59,6 +65,7 @@ async function generateWithClaudeSVG(story: Story, apiKey: string): Promise<stri
       max_tokens: 1024,
       messages: [{ role: 'user', content: buildSVGPrompt(story) }],
     }),
+    signal,
   })
   if (!res.ok) return null
   const data  = await res.json() as { content: Array<{ text: string }> }
@@ -68,11 +75,9 @@ async function generateWithClaudeSVG(story: Story, apiKey: string): Promise<stri
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(match[0])}`
 }
 
-export async function generateIllustration(story: Story, setup: Setup): Promise<string | null> {
+export async function generateIllustration(story: Story, setup: Setup, signal: AbortSignal): Promise<string | null> {
   if (setup.useLocal) return null
-  try {
-    if (setup.provider === 'openai' && setup.apiKey) return await generateWithDallE(story, setup.apiKey)
-    if (setup.provider === 'claude' && setup.apiKey) return await generateWithClaudeSVG(story, setup.apiKey)
-  } catch { /* non-critical */ }
+  if (setup.provider === 'openai' && setup.apiKey) return generateWithDallE(story, setup.apiKey, signal)
+  if (setup.provider === 'claude' && setup.apiKey) return generateWithClaudeSVG(story, setup.apiKey, signal)
   return null
 }

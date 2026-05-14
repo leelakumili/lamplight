@@ -1,20 +1,29 @@
 import React, { useState } from 'react'
 import { Icon } from '../components/Icon'
 import { Toggle } from '../components/Toggle'
-import type { Setup } from '../types'
+import type { Setup, Profile } from '../types'
+import { generateId } from '../lib/utils'
 
 interface SettingsProps {
   setup: Setup
+  profiles: Profile[]
+  activeProfileId: string | null
   onBack: () => void
   onSave: (setup: Setup) => void
+  onSaveProfiles: (profiles: Profile[], activeProfileId: string | null) => void
 }
 
-export function Settings({ setup: initialSetup, onBack, onSave }: SettingsProps) {
+export function Settings({ setup: initialSetup, profiles: initialProfiles, activeProfileId: initialActiveProfileId, onBack, onSave, onSaveProfiles }: SettingsProps) {
   const [setup, setSetup] = useState<Setup>(initialSetup)
   const [editingSketch, setEditingSketch] = useState(false)
   const [addingFriend, setAddingFriend] = useState(false)
   const [friendInput, setFriendInput] = useState('')
   const [showKey, setShowKey] = useState(false)
+  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles)
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(initialActiveProfileId)
+  const [addingProfile, setAddingProfile] = useState(false)
+  const [newProfileName, setNewProfileName] = useState('')
+  const [newProfileAge, setNewProfileAge] = useState('')
 
   function update<K extends keyof Setup>(key: K, value: Setup[K]) {
     const newSetup = { ...setup, [key]: value }
@@ -36,6 +45,38 @@ export function Settings({ setup: initialSetup, onBack, onSave }: SettingsProps)
 
   function removeFriend(i: number) {
     update('friends', setup.friends.filter((_, idx) => idx !== i))
+  }
+
+  function addProfile() {
+    const name = newProfileName.trim()
+    if (!name) { setAddingProfile(false); return }
+    const profile: Profile = {
+      id: generateId(),
+      name,
+      age: newProfileAge.trim(),
+      friends: [],
+      characterSketch: '',
+    }
+    const updated = [...profiles, profile]
+    setProfiles(updated)
+    setActiveProfileId(profile.id)
+    onSaveProfiles(updated, profile.id)
+    setNewProfileName('')
+    setNewProfileAge('')
+    setAddingProfile(false)
+  }
+
+  function removeProfile(id: string) {
+    const updated = profiles.filter(p => p.id !== id)
+    const newActive = activeProfileId === id ? (updated[0]?.id ?? null) : activeProfileId
+    setProfiles(updated)
+    setActiveProfileId(newActive)
+    onSaveProfiles(updated, newActive)
+  }
+
+  function switchProfile(id: string) {
+    setActiveProfileId(id)
+    onSaveProfiles(profiles, id)
   }
 
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
@@ -313,6 +354,183 @@ export function Settings({ setup: initialSetup, onBack, onSave }: SettingsProps)
                 Edit sketch
               </button>
             </>
+          )}
+        </div>
+
+        {/* Profiles */}
+        {profiles.length > 0 && (
+          <>
+            <SectionLabel>Profiles</SectionLabel>
+            <div
+              style={{
+                backgroundColor: '#f3ead8',
+                borderRadius: 14,
+                overflow: 'hidden',
+                marginBottom: 16,
+              }}
+            >
+              {profiles.map((profile, i) => (
+                <div
+                  key={profile.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '12px 16px',
+                    borderBottom: i < profiles.length - 1 ? '1px solid #dfd5bd' : 'none',
+                    gap: 10,
+                  }}
+                >
+                  <button
+                    onClick={() => switchProfile(profile.id)}
+                    style={{
+                      flex: 1,
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: activeProfileId === profile.id ? '#c9924a' : '#dfd5bd',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#3e3830' }}>
+                        {profile.name}
+                      </div>
+                      {profile.age && (
+                        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#76705f' }}>
+                          Age {profile.age}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                  {profiles.length > 1 && (
+                    <button
+                      onClick={() => removeProfile(profile.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                    >
+                      <Icon name="x" size={14} color="#b2aa97" strokeWidth={2} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Add profile */}
+        <div style={{ marginBottom: 16 }}>
+          {addingProfile ? (
+            <div
+              style={{
+                backgroundColor: '#f3ead8',
+                borderRadius: 14,
+                padding: '14px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              <input
+                autoFocus
+                type="text"
+                value={newProfileName}
+                onChange={e => setNewProfileName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addProfile() }}
+                placeholder="Name"
+                maxLength={24}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: '1px solid #dfd5bd',
+                  backgroundColor: '#faf4e8',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                  color: '#1f1b16',
+                }}
+              />
+              <input
+                type="text"
+                value={newProfileAge}
+                onChange={e => setNewProfileAge(e.target.value)}
+                placeholder="Age (optional)"
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: '1px solid #dfd5bd',
+                  backgroundColor: '#faf4e8',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                  color: '#1f1b16',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={addProfile}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: 10,
+                    border: 'none',
+                    backgroundColor: '#1f1b16',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: '#faf4e8',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => { setAddingProfile(false); setNewProfileName(''); setNewProfileAge('') }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 10,
+                    border: '1px solid #dfd5bd',
+                    backgroundColor: '#faf4e8',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 13,
+                    color: '#76705f',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddingProfile(true)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: 14,
+                border: '1.5px dashed #b2aa97',
+                backgroundColor: 'transparent',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: '#76705f',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <Icon name="plus" size={14} color="#76705f" strokeWidth={2} />
+              Add profile
+            </button>
           )}
         </div>
 

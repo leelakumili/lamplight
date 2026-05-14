@@ -1,15 +1,50 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Icon } from '../components/Icon'
 
 interface AfterStoryProps {
   mode: 'parent' | 'teen'
+  story: { title: string; content: string }
   onSave: () => void
   onWriteAnother: () => void
   onDone: () => void
   onBack: () => void
+  onRegenerate: () => void
 }
 
-export function AfterStory({ mode, onSave, onWriteAnother, onDone, onBack }: AfterStoryProps) {
+export function AfterStory({ mode, story, onSave, onWriteAnother, onDone, onBack, onRegenerate }: AfterStoryProps) {
+  const [shareToast, setShareToast] = useState<string | null>(null)
+
+  const canShare = typeof navigator !== 'undefined' && (!!navigator.share || !!navigator.clipboard)
+
+  async function handleShare() {
+    const text = `${story.title}\n\n${story.content}\n\n— A Storythread story`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: story.title, text })
+        showShareToast('Shared!')
+      } catch {
+        // User cancelled or error — try clipboard
+        await tryClipboard(text)
+      }
+    } else {
+      await tryClipboard(text)
+    }
+  }
+
+  async function tryClipboard(text: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      showShareToast('Copied to clipboard')
+    } catch {
+      showShareToast('Could not share')
+    }
+  }
+
+  function showShareToast(msg: string) {
+    setShareToast(msg)
+    setTimeout(() => setShareToast(null), 2000)
+  }
+
   return (
     <div
       style={{
@@ -102,7 +137,7 @@ export function AfterStory({ mode, onSave, onWriteAnother, onDone, onBack }: Aft
           </button>
 
           <button
-            onClick={onWriteAnother}
+            onClick={onRegenerate}
             style={{
               padding: '18px 20px',
               borderRadius: 16,
@@ -129,7 +164,7 @@ export function AfterStory({ mode, onSave, onWriteAnother, onDone, onBack }: Aft
                 color: 'rgba(233,223,201,0.5)',
               }}
             >
-              Write another
+              Try again
             </div>
           </button>
 
@@ -164,6 +199,37 @@ export function AfterStory({ mode, onSave, onWriteAnother, onDone, onBack }: Aft
               Close the book
             </div>
           </button>
+
+          {/* Share button */}
+          {canShare && (
+            <button
+              onClick={handleShare}
+              style={{
+                marginTop: 4,
+                padding: '14px 20px',
+                borderRadius: 16,
+                border: '1px solid rgba(201,146,74,0.25)',
+                backgroundColor: 'transparent',
+                textAlign: 'left',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <Icon name="share" size={18} color="#c9924a" />
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                  color: '#c9924a',
+                  fontWeight: 500,
+                }}
+              >
+                Share this story
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -180,6 +246,30 @@ export function AfterStory({ mode, onSave, onWriteAnother, onDone, onBack }: Aft
       >
         Nothing tracked · Nothing shared
       </div>
+
+      {/* Share toast */}
+      {shareToast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 32,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#1f1b16',
+            color: '#faf4e8',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+            padding: '10px 20px',
+            borderRadius: 20,
+            zIndex: 200,
+            animation: 'st-fade-in 0.2s ease both',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {shareToast}
+        </div>
+      )}
     </div>
   )
 }

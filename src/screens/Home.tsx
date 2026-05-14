@@ -144,6 +144,9 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
             {formatStoryAge(story.generatedAt)} · {story.mode} · {story.destination || 'story'}
           </div>
         </div>
+        {story.bookmarked && (
+          <Icon name="bookmark" size={14} color="#c9924a" style={{ fill: '#c9924a' }} />
+        )}
         <Icon name="chevron-right" size={16} color="#b2aa97" />
       </button>
 

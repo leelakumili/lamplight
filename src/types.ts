@@ -13,6 +13,14 @@ export type Screen =
   | 'after-story'
   | 'settings'
 
+export interface Profile {
+  id: string
+  name: string
+  age: string
+  friends: string[]
+  characterSketch: string
+}
+
 export interface Setup {
   name: string
   age: string
@@ -35,6 +43,7 @@ export interface Story {
   destination: string
   generatedAt: number
   mode: 'parent' | 'teen'
+  bookmarked?: boolean
 }
 
 export interface ParentInterview {
@@ -57,6 +66,9 @@ export interface AppState {
   readerTheme: 'cream' | 'sepia' | 'midnight'
   readerFontFamily: 'serif' | 'sans'
   generationError: string | null
+  currentMode: 'parent' | 'teen' | null
+  profiles: Profile[]
+  activeProfileId: string | null
 }
 
 export type AppAction =
@@ -73,3 +85,9 @@ export type AppAction =
   | { type: 'SET_GENERATION_ERROR'; error: string | null }
   | { type: 'LOAD_HISTORY'; stories: Story[] }
   | { type: 'DELETE_STORY'; id: string }
+  | { type: 'TOGGLE_BOOKMARK'; id: string }
+  | { type: 'SET_MODE'; mode: 'parent' | 'teen' }
+  | { type: 'SET_PROFILES'; profiles: Profile[]; activeProfileId: string | null }
+  | { type: 'SET_ACTIVE_PROFILE'; id: string }
+  | { type: 'ADD_PROFILE'; profile: Profile }
+  | { type: 'UPDATE_ACTIVE_PROFILE'; profile: Partial<Profile> }

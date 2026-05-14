@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Icon } from '../components/Icon'
 import { paginateStory } from '../lib/utils'
 import type { Story } from '../types'
@@ -8,11 +8,13 @@ interface ReadingProps {
   fontSize: number
   theme: 'cream' | 'sepia' | 'midnight'
   fontFamily: 'serif' | 'sans'
+  bookmarked: boolean
   onBack: () => void
   onDone: () => void
   onChangeFontSize: (s: number) => void
   onChangeTheme: (t: 'cream' | 'sepia' | 'midnight') => void
   onChangeFontFamily: (f: 'serif' | 'sans') => void
+  onToggleBookmark: () => void
 }
 
 const FONT_SIZES = [14, 16, 18, 20, 22]
@@ -34,19 +36,81 @@ export function Reading({
   fontSize,
   theme,
   fontFamily,
+  bookmarked,
   onBack,
   onDone,
   onChangeFontSize,
   onChangeTheme,
   onChangeFontFamily,
+  onToggleBookmark,
 }: ReadingProps) {
   const [page, setPage] = useState(0)
   const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null)
   const [showTypeSheet, setShowTypeSheet] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [bookmarkToast, setBookmarkToast] = useState<string | null>(null)
+
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   const pages = paginateStory(story.content)
   const totalPages = pages.length
   const currentPageText = pages[page] || ''
+
+  // Cancel speech on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel()
+    }
+  }, [])
+
+  // When page changes, stop speech
+  useEffect(() => {
+    if (isSpeaking || isPaused) {
+      window.speechSynthesis?.cancel()
+      setIsSpeaking(false)
+      setIsPaused(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
+
+  function speakPage(text: string) {
+    window.speechSynthesis?.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 0.92
+    utterance.pitch = 1.0
+    utterance.onend = () => {
+      setIsSpeaking(false)
+      setIsPaused(false)
+    }
+    utterance.onerror = () => {
+      setIsSpeaking(false)
+      setIsPaused(false)
+    }
+    utteranceRef.current = utterance
+    window.speechSynthesis?.speak(utterance)
+    setIsSpeaking(true)
+    setIsPaused(false)
+  }
+
+  function toggleSpeech() {
+    if (isSpeaking && !isPaused) {
+      window.speechSynthesis?.pause()
+      setIsPaused(true)
+    } else if (isPaused) {
+      window.speechSynthesis?.resume()
+      setIsPaused(false)
+    } else {
+      speakPage(currentPageText)
+    }
+  }
+
+  function handleBack() {
+    window.speechSynthesis?.cancel()
+    setIsSpeaking(false)
+    setIsPaused(false)
+    onBack()
+  }
 
   function goToPage(next: number) {
     if (next < 0 || next > totalPages) return
@@ -56,6 +120,14 @@ export function Reading({
       if (next >= totalPages) onDone()
       setSlideDir(null)
     }, 220)
+  }
+
+  function handleBookmarkToggle(e: React.MouseEvent) {
+    e.stopPropagation()
+    onToggleBookmark()
+    const msg = bookmarked ? 'Removed' : 'Saved'
+    setBookmarkToast(msg)
+    setTimeout(() => setBookmarkToast(null), 1500)
   }
 
   const colors = THEME_COLORS[theme]
@@ -108,7 +180,7 @@ export function Reading({
       >
         {/* Back pill */}
         <button
-          onClick={e => { e.stopPropagation(); onBack() }}
+          onClick={e => { e.stopPropagation(); handleBack() }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -167,25 +239,48 @@ export function Reading({
           </div>
         </div>
 
-        {/* Type-sheet icon */}
-        <button
-          onClick={e => { e.stopPropagation(); setShowTypeSheet(v => !v) }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 40,
-            height: 36,
-            borderRadius: 20,
-            backgroundColor: 'rgba(15,16,26,0.7)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(233,223,201,0.12)',
-            color: '#e9dfc9',
-            cursor: 'pointer',
-          }}
-        >
-          <Icon name="type" size={16} color="#e9dfc9" />
-        </button>
+        {/* Right side: Speaker + Type buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Speaker/Pause button */}
+          <button
+            onClick={e => { e.stopPropagation(); toggleSpeech() }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 36,
+              borderRadius: 20,
+              backgroundColor: (isSpeaking || isPaused) ? 'rgba(201,146,74,0.3)' : 'rgba(15,16,26,0.7)',
+              backdropFilter: 'blur(10px)',
+              border: (isSpeaking || isPaused) ? '1px solid rgba(201,146,74,0.5)' : '1px solid rgba(233,223,201,0.12)',
+              color: '#e9dfc9',
+              cursor: 'pointer',
+            }}
+          >
+            <Icon name={isSpeaking && !isPaused ? 'pause' : 'speaker'} size={16} color="#e9dfc9" />
+          </button>
+
+          {/* Type-sheet icon */}
+          <button
+            onClick={e => { e.stopPropagation(); setShowTypeSheet(v => !v) }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 36,
+              borderRadius: 20,
+              backgroundColor: 'rgba(15,16,26,0.7)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(233,223,201,0.12)',
+              color: '#e9dfc9',
+              cursor: 'pointer',
+            }}
+          >
+            <Icon name="type" size={16} color="#e9dfc9" />
+          </button>
+        </div>
       </div>
 
       {/* Title zone — top half background */}
@@ -318,17 +413,27 @@ export function Reading({
               borderTop: `1px solid ${theme === 'cream' ? '#dfd5bd' : 'rgba(233,223,201,0.1)'}`,
             }}
           >
-            <div
+            {/* Bookmark button (left side) */}
+            <button
+              onClick={handleBookmarkToggle}
               style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 11,
-                color: theme === 'cream' ? '#b2aa97' : 'rgba(233,223,201,0.4)',
-                letterSpacing: '0.06em',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
                 minWidth: 44,
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              {pageNum}/{totalNum}
-            </div>
+              <Icon
+                name="bookmark"
+                size={18}
+                color={bookmarked ? '#c9924a' : (theme === 'cream' ? '#b2aa97' : 'rgba(233,223,201,0.4)')}
+                strokeWidth={bookmarked ? 0 : 1.6}
+                style={bookmarked ? { fill: '#c9924a' } : undefined}
+              />
+            </button>
 
             {/* Dot progress */}
             <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
@@ -512,6 +617,30 @@ export function Reading({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Bookmark toast */}
+      {bookmarkToast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 48,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#1f1b16',
+            color: '#faf4e8',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+            padding: '10px 20px',
+            borderRadius: 20,
+            zIndex: 100,
+            animation: 'st-fade-in 0.2s ease both',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {bookmarkToast}
         </div>
       )}
     </div>

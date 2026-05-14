@@ -1,8 +1,9 @@
 import React, { useReducer, useEffect, useState } from 'react'
 import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
-import { saveSetup, loadSetup, saveStory, loadStories, deleteStory } from './lib/db'
+import { saveSetup, loadSetup, saveStory, loadStories, deleteStory, saveProfiles, loadProfiles, saveActiveProfileId, loadActiveProfileId } from './lib/db'
 import { generateStory } from './lib/generateStory'
 import { generateId } from './lib/utils'
+import type { Profile } from './types'
 
 // Screens
 import { OnbWelcome } from './screens/OnbWelcome'
@@ -39,6 +40,9 @@ const initialState: AppState = {
   readerTheme: 'midnight',
   readerFontFamily: 'serif',
   generationError: null,
+  currentMode: null,
+  profiles: [],
+  activeProfileId: null,
 }
 
 function reducer(state: AppState, action: AppAction): AppState {
@@ -69,6 +73,31 @@ function reducer(state: AppState, action: AppAction): AppState {
       return { ...state, history: action.stories }
     case 'DELETE_STORY':
       return { ...state, history: state.history.filter(s => s.id !== action.id) }
+    case 'TOGGLE_BOOKMARK': {
+      const updated = state.history.map(s =>
+        s.id === action.id ? { ...s, bookmarked: !s.bookmarked } : s
+      )
+      const updatedStory = updated.find(s => s.id === action.id) ?? null
+      return {
+        ...state,
+        history: updated,
+        currentStory: state.currentStory?.id === action.id ? updatedStory : state.currentStory,
+      }
+    }
+    case 'SET_MODE':
+      return { ...state, currentMode: action.mode }
+    case 'SET_PROFILES':
+      return { ...state, profiles: action.profiles, activeProfileId: action.activeProfileId }
+    case 'SET_ACTIVE_PROFILE':
+      return { ...state, activeProfileId: action.id }
+    case 'ADD_PROFILE':
+      return { ...state, profiles: [...state.profiles, action.profile] }
+    case 'UPDATE_ACTIVE_PROFILE': {
+      const profiles = state.profiles.map(p =>
+        p.id === state.activeProfileId ? { ...p, ...action.profile } : p
+      )
+      return { ...state, profiles }
+    }
     default:
       return state
   }
@@ -82,7 +111,9 @@ export default function App() {
   // Load persisted data
   useEffect(() => {
     async function init() {
-      const [setup, stories] = await Promise.all([loadSetup(), loadStories()])
+      const [setup, stories, profiles, activeProfileId] = await Promise.all([
+        loadSetup(), loadStories(), loadProfiles(), loadActiveProfileId(),
+      ])
       if (setup) {
         dispatch({ type: 'SET_SETUP', setup })
         dispatch({ type: 'SET_READER_FONT_SIZE', size: setup.defaultFontSize || 16 })
@@ -92,6 +123,9 @@ export default function App() {
       }
       if (stories.length > 0) {
         dispatch({ type: 'LOAD_HISTORY', stories })
+      }
+      if (profiles.length > 0) {
+        dispatch({ type: 'SET_PROFILES', profiles, activeProfileId })
       }
       setLoaded(true)
     }
@@ -185,7 +219,22 @@ export default function App() {
     )
   }
 
-  const { screen, setup, history, interview, selectedTheme, currentStory, readerFontSize, readerTheme, readerFontFamily } = state
+  async function toggleBookmark(id: string) {
+    dispatch({ type: 'TOGGLE_BOOKMARK', id })
+    // Persist updated story
+    const story = state.history.find(s => s.id === id)
+    if (story) {
+      await saveStory({ ...story, bookmarked: !story.bookmarked })
+    }
+  }
+
+  async function handleSaveProfiles(profiles: Profile[], activeProfileId: string | null) {
+    dispatch({ type: 'SET_PROFILES', profiles, activeProfileId })
+    await saveProfiles(profiles)
+    await saveActiveProfileId(activeProfileId)
+  }
+
+  const { screen, setup, history, interview, selectedTheme, currentStory, readerFontSize, readerTheme, readerFontFamily, profiles, activeProfileId } = state
 
   function renderScreen() {
     switch (screen) {
@@ -317,11 +366,13 @@ export default function App() {
             fontSize={readerFontSize}
             theme={readerTheme}
             fontFamily={readerFontFamily}
+            bookmarked={!!currentStory.bookmarked}
             onBack={() => nav('home')}
             onDone={() => nav('after-story')}
             onChangeFontSize={size => dispatch({ type: 'SET_READER_FONT_SIZE', size })}
             onChangeTheme={theme => dispatch({ type: 'SET_READER_THEME', theme })}
             onChangeFontFamily={family => dispatch({ type: 'SET_READER_FONT_FAMILY', family })}
+            onToggleBookmark={() => currentStory && toggleBookmark(currentStory.id)}
           />
         ) : null
 
@@ -329,6 +380,7 @@ export default function App() {
         return currentStory ? (
           <AfterStory
             mode={currentStory.mode}
+            story={{ title: currentStory.title, content: currentStory.content }}
             onBack={() => nav('reading')}
             onSave={() => {
               showToast('Story saved.')
@@ -342,6 +394,10 @@ export default function App() {
                 nav('parent-q1')
               }
             }}
+            onRegenerate={() => {
+              dispatch({ type: 'SET_CURRENT_STORY', story: null })
+              startGeneration(currentStory.mode)
+            }}
             onDone={() => {
               dispatch({ type: 'SET_CURRENT_STORY', story: null })
               nav('home')
@@ -353,8 +409,11 @@ export default function App() {
         return setup ? (
           <Settings
             setup={setup}
+            profiles={profiles}
+            activeProfileId={activeProfileId}
             onBack={() => nav('home')}
             onSave={handleSaveSetupChange}
+            onSaveProfiles={handleSaveProfiles}
           />
         ) : null
 

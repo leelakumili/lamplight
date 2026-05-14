@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { Setup, Story } from '../types'
+import type { Setup, Story, Profile } from '../types'
 
 let dbPromise: Promise<IDBPDatabase> | null = null
 
@@ -52,4 +52,34 @@ export async function loadStories(): Promise<Story[]> {
 export async function deleteStory(id: string): Promise<void> {
   const db = await getDB()
   await db.delete('stories', id)
+}
+
+export async function saveProfiles(profiles: Profile[]): Promise<void> {
+  const db = await getDB()
+  await db.put('data', profiles, 'profiles')
+}
+
+export async function loadProfiles(): Promise<Profile[]> {
+  try {
+    const db = await getDB()
+    const profiles = await db.get('data', 'profiles')
+    return profiles ?? []
+  } catch {
+    return []
+  }
+}
+
+export async function saveActiveProfileId(id: string | null): Promise<void> {
+  const db = await getDB()
+  await db.put('data', id, 'activeProfileId')
+}
+
+export async function loadActiveProfileId(): Promise<string | null> {
+  try {
+    const db = await getDB()
+    const id = await db.get('data', 'activeProfileId')
+    return id ?? null
+  } catch {
+    return null
+  }
 }

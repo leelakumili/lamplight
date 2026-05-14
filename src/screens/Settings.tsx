@@ -13,17 +13,14 @@ interface SettingsProps {
   onSaveProfiles: (profiles: Profile[], activeProfileId: string | null) => void
 }
 
-export function Settings({ setup: initialSetup, profiles: initialProfiles, activeProfileId: initialActiveProfileId, onBack, onSave, onSaveProfiles }: SettingsProps) {
+export function Settings({ setup: initialSetup, profiles, activeProfileId, onBack, onSave, onSaveProfiles }: SettingsProps) {
   const [setup, setSetup] = useState<Setup>(initialSetup)
   const [editingSketch, setEditingSketch] = useState(false)
   const [addingFriend, setAddingFriend] = useState(false)
   const [friendInput, setFriendInput] = useState('')
   const [showKey, setShowKey] = useState(false)
-  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles)
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(initialActiveProfileId)
   const [addingProfile, setAddingProfile] = useState(false)
   const [newProfileName, setNewProfileName] = useState('')
-  const [newProfileAge, setNewProfileAge] = useState('')
 
   function update<K extends keyof Setup>(key: K, value: Setup[K]) {
     const newSetup = { ...setup, [key]: value }
@@ -47,129 +44,92 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
     update('friends', setup.friends.filter((_, idx) => idx !== i))
   }
 
-  function addProfile() {
+  function handleAddProfile() {
     const name = newProfileName.trim()
     if (!name) { setAddingProfile(false); return }
-    const profile: Profile = {
-      id: generateId(),
-      name,
-      age: newProfileAge.trim(),
-      friends: [],
-      characterSketch: '',
-    }
+    const profile: Profile = { id: generateId(), name, age: '', friends: [], characterSketch: '' }
     const updated = [...profiles, profile]
-    setProfiles(updated)
-    setActiveProfileId(profile.id)
     onSaveProfiles(updated, profile.id)
     setNewProfileName('')
-    setNewProfileAge('')
     setAddingProfile(false)
   }
 
-  function removeProfile(id: string) {
-    const updated = profiles.filter(p => p.id !== id)
-    const newActive = activeProfileId === id ? (updated[0]?.id ?? null) : activeProfileId
-    setProfiles(updated)
-    setActiveProfileId(newActive)
-    onSaveProfiles(updated, newActive)
-  }
-
-  function switchProfile(id: string) {
-    setActiveProfileId(id)
+  function handleSetActiveProfile(id: string) {
     onSaveProfiles(profiles, id)
   }
 
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <div
-      style={{
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: 10,
-        fontWeight: 500,
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase',
-        color: '#76705f',
-        marginBottom: 8,
-        paddingLeft: 2,
-      }}
-    >
+    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#76705f', marginBottom: 8, paddingLeft: 2 }}>
       {children}
     </div>
   )
 
   const Card = ({ children }: { children: React.ReactNode }) => (
-    <div
-      style={{
-        backgroundColor: '#f3ead8',
-        borderRadius: 14,
-        overflow: 'hidden',
-        marginBottom: 16,
-      }}
-    >
+    <div style={{ backgroundColor: '#f3ead8', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
       {children}
     </div>
   )
 
   const Row = ({ label, children, last }: { label: string; children: React.ReactNode; last?: boolean }) => (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '14px 16px',
-        borderBottom: last ? 'none' : '1px solid #dfd5bd',
-        gap: 12,
-      }}
-    >
-      <div
-        style={{
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: 14,
-          color: '#3e3830',
-          flexShrink: 0,
-        }}
-      >
-        {label}
-      </div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: last ? 'none' : '1px solid #dfd5bd', gap: 12 }}>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#3e3830', flexShrink: 0 }}>{label}</div>
       <div style={{ flex: 1, textAlign: 'right' }}>{children}</div>
     </div>
   )
 
   return (
-    <div
-      style={{
-        minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
-        display: 'flex',
-        flexDirection: 'column',
-        animation: 'st-fade-in 0.3s ease both',
-      }}
-    >
+    <div style={{ minHeight: '100dvh', backgroundColor: '#faf4e8', display: 'flex', flexDirection: 'column', animation: 'st-fade-in 0.3s ease both' }}>
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '16px 20px',
-          borderBottom: '1px solid #ebdfc7',
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid #ebdfc7' }}>
         <button onClick={onBack} style={{ padding: 4 }}>
           <Icon name="chevron-left" size={24} color="#3e3830" />
         </button>
-        <div
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 15,
-            fontWeight: 500,
-            color: '#1f1b16',
-          }}
-        >
-          Settings
-        </div>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 500, color: '#1f1b16' }}>Settings</div>
       </div>
 
       <div style={{ flex: 1, padding: '20px 16px 40px', overflowY: 'auto' }}>
+
+        {/* Profiles section */}
+        {profiles.length > 0 && (
+          <>
+            <SectionLabel>Profiles</SectionLabel>
+            <div style={{ backgroundColor: '#f3ead8', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
+              {profiles.map((p, i) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleSetActiveProfile(p.id)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', border: 'none', borderBottom: i < profiles.length - 1 || addingProfile ? '1px solid #dfd5bd' : 'none', backgroundColor: 'transparent', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#3e3830', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {p.name}
+                  {p.id === activeProfileId && <Icon name="check" size={16} color="#c9924a" strokeWidth={2} />}
+                </button>
+              ))}
+              {addingProfile ? (
+                <div style={{ padding: '10px 16px', borderTop: '1px solid #dfd5bd' }}>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newProfileName}
+                    onChange={e => setNewProfileName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddProfile() }}
+                    onBlur={handleAddProfile}
+                    placeholder="Profile name…"
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #c9924a', backgroundColor: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#1f1b16', boxSizing: 'border-box' }}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddingProfile(true)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '14px 16px', border: 'none', borderTop: '1px solid #dfd5bd', backgroundColor: 'transparent', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#a35d3a', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <Icon name="plus" size={14} color="#a35d3a" strokeWidth={2} />
+                  Add profile
+                </button>
+              )}
+            </div>
+          </>
+        )}
+
         {/* Reader Profile */}
         <SectionLabel>Reader Profile</SectionLabel>
         <Card>
@@ -179,15 +139,7 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
               value={setup.name}
               onChange={e => update('name', e.target.value.slice(0, 24))}
               maxLength={24}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14,
-                color: '#76705f',
-                textAlign: 'right',
-                width: 150,
-              }}
+              style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#76705f', textAlign: 'right', width: 150 }}
             />
           </Row>
           <Row label="Age" last>
@@ -195,65 +147,23 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
               type="text"
               value={setup.age}
               onChange={e => update('age', e.target.value)}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14,
-                color: '#76705f',
-                textAlign: 'right',
-                width: 80,
-              }}
+              style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#76705f', textAlign: 'right', width: 80 }}
             />
           </Row>
         </Card>
 
         {/* Friends */}
         <SectionLabel>Friends ({setup.friends.length} / 5)</SectionLabel>
-        <div
-          style={{
-            backgroundColor: '#f3ead8',
-            borderRadius: 14,
-            padding: '14px 16px',
-            marginBottom: 16,
-          }}
-        >
+        <div style={{ backgroundColor: '#f3ead8', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {setup.friends.map((f, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  padding: '6px 10px 6px 12px',
-                  borderRadius: 20,
-                  backgroundColor: '#1f1b16',
-                  color: '#faf4e8',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  fontWeight: 500,
-                }}
-              >
+              <div key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 10px 6px 12px', borderRadius: 20, backgroundColor: '#1f1b16', color: '#faf4e8', fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500 }}>
                 {f}
-                <button
-                  onClick={() => removeFriend(i)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: 0,
-                    marginLeft: 2,
-                    color: '#b2aa97',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
+                <button onClick={() => removeFriend(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 2, color: '#b2aa97', display: 'flex', alignItems: 'center' }}>
                   <Icon name="x" size={12} color="#b2aa97" strokeWidth={2} />
                 </button>
               </div>
             ))}
-
             {addingFriend ? (
               <input
                 autoFocus
@@ -263,33 +173,12 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
                 onKeyDown={e => { if (e.key === 'Enter') addFriend() }}
                 onBlur={addFriend}
                 placeholder="Name…"
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 20,
-                  border: '1px solid #c9924a',
-                  backgroundColor: '#fff',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  color: '#1f1b16',
-                  width: 120,
-                }}
+                style={{ padding: '6px 12px', borderRadius: 20, border: '1px solid #c9924a', backgroundColor: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#1f1b16', width: 120 }}
               />
             ) : setup.friends.length < 5 ? (
               <button
                 onClick={() => setAddingFriend(true)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  padding: '6px 12px',
-                  borderRadius: 20,
-                  border: '1.5px dashed #b2aa97',
-                  backgroundColor: 'transparent',
-                  color: '#76705f',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  cursor: 'pointer',
-                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 20, border: '1.5px dashed #b2aa97', backgroundColor: 'transparent', color: '#76705f', fontFamily: "'DM Sans', sans-serif", fontSize: 13, cursor: 'pointer' }}
               >
                 <Icon name="plus" size={12} color="#76705f" strokeWidth={2} />
                 Add
@@ -300,237 +189,24 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
 
         {/* Character Sketch */}
         <SectionLabel>Character Sketch</SectionLabel>
-        <div
-          style={{
-            backgroundColor: '#f3ead8',
-            borderRadius: 14,
-            padding: '14px 16px',
-            marginBottom: 16,
-          }}
-        >
+        <div style={{ backgroundColor: '#f3ead8', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
           {editingSketch ? (
             <textarea
               autoFocus
               value={setup.characterSketch}
               onChange={e => update('characterSketch', e.target.value)}
               onBlur={() => setEditingSketch(false)}
-              style={{
-                width: '100%',
-                border: 'none',
-                backgroundColor: 'transparent',
-                fontFamily: "'Newsreader', Georgia, serif",
-                fontSize: 14,
-                lineHeight: 1.55,
-                color: '#1f1b16',
-                minHeight: 80,
-              }}
+              style={{ width: '100%', border: 'none', backgroundColor: 'transparent', fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, lineHeight: 1.55, color: '#1f1b16', minHeight: 80 }}
             />
           ) : (
             <>
-              <p
-                style={{
-                  fontFamily: "'Newsreader', Georgia, serif",
-                  fontSize: 14,
-                  lineHeight: 1.55,
-                  color: setup.characterSketch ? '#1f1b16' : '#b2aa97',
-                  marginBottom: 10,
-                  fontStyle: setup.characterSketch ? 'normal' : 'italic',
-                }}
-              >
+              <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, lineHeight: 1.55, color: setup.characterSketch ? '#1f1b16' : '#b2aa97', marginBottom: 10, fontStyle: setup.characterSketch ? 'normal' : 'italic' }}>
                 {setup.characterSketch || 'No sketch added yet.'}
               </p>
-              <button
-                onClick={() => setEditingSketch(true)}
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  color: '#a35d3a',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              >
+              <button onClick={() => setEditingSketch(true)} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#a35d3a', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 Edit sketch
               </button>
             </>
-          )}
-        </div>
-
-        {/* Profiles */}
-        {profiles.length > 0 && (
-          <>
-            <SectionLabel>Profiles</SectionLabel>
-            <div
-              style={{
-                backgroundColor: '#f3ead8',
-                borderRadius: 14,
-                overflow: 'hidden',
-                marginBottom: 16,
-              }}
-            >
-              {profiles.map((profile, i) => (
-                <div
-                  key={profile.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    borderBottom: i < profiles.length - 1 ? '1px solid #dfd5bd' : 'none',
-                    gap: 10,
-                  }}
-                >
-                  <button
-                    onClick={() => switchProfile(profile.id)}
-                    style={{
-                      flex: 1,
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: 0,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: activeProfileId === profile.id ? '#c9924a' : '#dfd5bd',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div>
-                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#3e3830' }}>
-                        {profile.name}
-                      </div>
-                      {profile.age && (
-                        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#76705f' }}>
-                          Age {profile.age}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                  {profiles.length > 1 && (
-                    <button
-                      onClick={() => removeProfile(profile.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
-                    >
-                      <Icon name="x" size={14} color="#b2aa97" strokeWidth={2} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Add profile */}
-        <div style={{ marginBottom: 16 }}>
-          {addingProfile ? (
-            <div
-              style={{
-                backgroundColor: '#f3ead8',
-                borderRadius: 14,
-                padding: '14px 16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              <input
-                autoFocus
-                type="text"
-                value={newProfileName}
-                onChange={e => setNewProfileName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') addProfile() }}
-                placeholder="Name"
-                maxLength={24}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 10,
-                  border: '1px solid #dfd5bd',
-                  backgroundColor: '#faf4e8',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 14,
-                  color: '#1f1b16',
-                }}
-              />
-              <input
-                type="text"
-                value={newProfileAge}
-                onChange={e => setNewProfileAge(e.target.value)}
-                placeholder="Age (optional)"
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 10,
-                  border: '1px solid #dfd5bd',
-                  backgroundColor: '#faf4e8',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 14,
-                  color: '#1f1b16',
-                }}
-              />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={addProfile}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    borderRadius: 10,
-                    border: 'none',
-                    backgroundColor: '#1f1b16',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: '#faf4e8',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Add
-                </button>
-                <button
-                  onClick={() => { setAddingProfile(false); setNewProfileName(''); setNewProfileAge('') }}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 10,
-                    border: '1px solid #dfd5bd',
-                    backgroundColor: '#faf4e8',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    color: '#76705f',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setAddingProfile(true)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: 14,
-                border: '1.5px dashed #b2aa97',
-                backgroundColor: 'transparent',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 13,
-                color: '#76705f',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-              }}
-            >
-              <Icon name="plus" size={14} color="#76705f" strokeWidth={2} />
-              Add profile
-            </button>
           )}
         </div>
 
@@ -541,15 +217,7 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
             <select
               value={setup.provider}
               onChange={e => update('provider', e.target.value as 'claude' | 'openai')}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14,
-                color: '#76705f',
-                appearance: 'none',
-                cursor: 'pointer',
-              }}
+              style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#76705f', appearance: 'none', cursor: 'pointer' }}
             >
               <option value="claude">Claude Sonnet</option>
               <option value="openai">GPT-4o</option>
@@ -562,99 +230,38 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
                 value={setup.apiKey}
                 onChange={e => update('apiKey', e.target.value)}
                 placeholder="Not set"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 13,
-                  color: '#76705f',
-                  textAlign: 'right',
-                  maxWidth: 150,
-                }}
+                style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#76705f', textAlign: 'right', maxWidth: 150 }}
               />
-              <button
-                onClick={() => setShowKey(v => !v)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
+              <button onClick={() => setShowKey(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 <Icon name={showKey ? 'eye-off' : 'eye'} size={16} color="#76705f" />
               </button>
             </div>
           </Row>
           <Row label="Use local model">
-            <Toggle
-              checked={setup.useLocal}
-              onChange={v => update('useLocal', v)}
-            />
+            <Toggle checked={setup.useLocal} onChange={v => update('useLocal', v)} />
           </Row>
           {setup.useLocal && (
             <div style={{ padding: '4px 16px 14px' }}>
               <div style={{ marginBottom: 10 }}>
-                <div style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: '#76705f',
-                  marginBottom: 6,
-                }}>
-                  Ollama URL
-                </div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#76705f', marginBottom: 6 }}>Ollama URL</div>
                 <input
                   type="text"
                   value={setup.ollamaUrl}
                   onChange={e => update('ollamaUrl', e.target.value)}
                   placeholder="http://localhost:11434"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 10,
-                    border: '1px solid #dfd5bd',
-                    backgroundColor: '#faf4e8',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 14,
-                    color: '#1f1b16',
-                    boxSizing: 'border-box',
-                  }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #dfd5bd', backgroundColor: '#faf4e8', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#1f1b16', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
-                <div style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: '#76705f',
-                  marginBottom: 6,
-                }}>
-                  Model name
-                </div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#76705f', marginBottom: 6 }}>Model name</div>
                 <input
                   type="text"
                   value={setup.ollamaModel || ''}
                   onChange={e => update('ollamaModel', e.target.value)}
                   placeholder="e.g. gemma3:12b, llama3.1, mistral"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 10,
-                    border: '1px solid #dfd5bd',
-                    backgroundColor: '#faf4e8',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 14,
-                    color: '#1f1b16',
-                    boxSizing: 'border-box',
-                  }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #dfd5bd', backgroundColor: '#faf4e8', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#1f1b16', boxSizing: 'border-box' }}
                 />
-                <div style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 11,
-                  color: '#b2aa97',
-                  marginTop: 5,
-                }}>
-                  Must match exactly what `ollama list` shows
-                </div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: '#b2aa97', marginTop: 5 }}>Must match exactly what `ollama list` shows</div>
               </div>
             </div>
           )}
@@ -668,15 +275,7 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
             <select
               value={setup.defaultFontSize}
               onChange={e => update('defaultFontSize', Number(e.target.value))}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14,
-                color: '#76705f',
-                appearance: 'none',
-                cursor: 'pointer',
-              }}
+              style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#76705f', appearance: 'none', cursor: 'pointer' }}
             >
               {[14, 16, 18, 20, 22].map(s => (
                 <option key={s} value={s}>{s}px</option>
@@ -687,15 +286,7 @@ export function Settings({ setup: initialSetup, profiles: initialProfiles, activ
       </div>
 
       {/* Footer */}
-      <div
-        style={{
-          padding: '16px',
-          textAlign: 'center',
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11,
-          color: '#76705f',
-        }}
-      >
+      <div style={{ padding: '16px', textAlign: 'center', fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#76705f' }}>
         Storythread · v1.0 · local-first
       </div>
     </div>

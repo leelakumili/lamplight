@@ -66,8 +66,6 @@ export interface AppState {
   readerFontSize: number
   readerTheme: 'cream' | 'sepia' | 'midnight'
   readerFontFamily: 'serif' | 'sans'
-  generationError: string | null
-  currentMode: 'parent' | 'teen' | null
   profiles: Profile[]
   activeProfileId: string | null
 }
@@ -83,11 +81,9 @@ export type AppAction =
   | { type: 'SET_READER_FONT_SIZE'; size: number }
   | { type: 'SET_READER_THEME'; theme: 'cream' | 'sepia' | 'midnight' }
   | { type: 'SET_READER_FONT_FAMILY'; family: 'serif' | 'sans' }
-  | { type: 'SET_GENERATION_ERROR'; error: string | null }
   | { type: 'LOAD_HISTORY'; stories: Story[] }
   | { type: 'DELETE_STORY'; id: string }
   | { type: 'TOGGLE_BOOKMARK'; id: string }
-  | { type: 'SET_MODE'; mode: 'parent' | 'teen' }
   | { type: 'SET_PROFILES'; profiles: Profile[]; activeProfileId: string | null }
   | { type: 'SET_ACTIVE_PROFILE'; id: string }
   | { type: 'ADD_PROFILE'; profile: Profile }

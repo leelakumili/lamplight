@@ -1,256 +1,126 @@
 import type { Setup, ParentInterview } from '../types'
 import { sanitizeInput, checkSafetySmart } from './safety'
-
-const SYSTEM_PROMPT = `You are a literary author writing short fiction for teens aged 10–16.
-
-YOUR FIRST SENTENCE must drop the reader into a moment already happening — an action, a sound, a feeling. It must never describe who anyone is or what they look like.
-
-FORBIDDEN — never write any of these:
-- A character list or introduction: "Avyanna, with her long hair, sat..." / "There were five friends: Avyanna, Ivy..."
-- Appearance labels: "the tall one", "the short one", "the quiet one", "the smallest", "the one with wavy hair"
-- Race, ethnicity, nationality, body type, height, skin tone — of any character
-- Direct retelling of the situation you were given — change the setting, the scene, the surface entirely
-- Therapy language: "she realized", "she understood", "the lesson was", "she learned"
-- Preaching or moralizing of any kind
-
-GOOD OPENING (do this):
-  The rehearsal ran twenty minutes over, and by the time Avyanna stepped outside, the parking lot was empty except for Paavani sitting on the curb eating chips.
-
-BAD OPENING (never do this):
-  In the heart of the park, five friends gathered. Avyanna, with her long dark hair, sat on a bench. Ivy, the jokester, and Lily, the quiet one, were nearby.
-
-STORY STRUCTURE — follow this arc:
-1. Open mid-scene. Character in motion. World specific and textured.
-2. Something hard happens or lands. Show it; don't editorialize.
-3. A small turn — an unexpected moment, a different angle, a quiet interior shift.
-4. Resolution — the emotional destination, not a plot solution.
-5. One closing sentence. A feeling, not a moral.
-
-CRAFT — this separates a memorable story from a forgettable one:
-- Names are just names. Do not attach labels to them.
-- Friends enter scenes because the scene needs them, not to be introduced.
-- Use specific sensory detail: the smell of a gym bag, the sound of a chair scraping tile, a pencil eraser worn to nothing. Not "she felt nervous" — "her knee wouldn't stop bouncing."
-- Vary sentence rhythm deliberately. Short sentences land hard. Longer ones carry the reader through a moment that hasn't resolved yet, letting them feel the weight of waiting alongside the character. Alternate them.
-- Include one image or line that stays with the reader after the story ends — something small and true that holds the whole feeling.
-- Surprise the reader once. Not a plot twist — an unexpected detail, a line of dialogue, a moment they didn't see coming but immediately recognise as real.
-- Dialogue sounds like actual teens: incomplete sentences, subject changes mid-thought, things left unsaid on purpose.
-- 1200–1500 words. Develop each beat fully. Do not rush.
-
-OUTPUT FORMAT — follow exactly, every time:
-Line 1: The story title — 2 to 5 words. A complete, standalone phrase. Never a sentence fragment.
-  GOOD: "The Weight of Afternoon" · "Something Borrowed" · "After Practice" · "What She Kept"
-  BAD:  "The scent of chlorine and" · "She had always been" · "A tangle of"
-Line 2: blank
-Line 3: blank
-Line 4 onward: the story text.
-Output nothing else — no "Here is the story", no explanation, no code fences.`
-
-function buildParentPrompt(setup: Setup, interview: ParentInterview): string {
-  const emotionsStr = interview.emotions.length > 0 ? interview.emotions.join(', ') : 'unspecified'
-  const friendsStr = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
-  const whoNote = interview.whoNote?.trim() || interview.whoWasThere.join(', ') || 'unspecified'
-  const emotionNote = interview.emotionNote?.trim() || ''
-  const sketch = sanitizeSketch(setup.characterSketch || '')
-
-  return `Use the following as source material — transform it into original fiction, do not retell it.
-
-MAIN CHARACTER
-Name: ${setup.name}
-${sketch ? `Personality / details (use sparingly for texture, never as identity markers): ${sketch}` : ''}
-
-FRIENDS WHO APPEAR IN THE STORY (use these names naturally — they are just names)
-${friendsStr}
-
-WHAT HAPPENED (this is private parent context — reshape it entirely, do not quote or paraphrase it)
-${interview.moment}
-
-WHO WAS INVOLVED
-${whoNote}
-
-HOW THE CHARACTER FELT
-${emotionsStr}${emotionNote ? `\nAdditional note: ${emotionNote}` : ''}
-
-WHERE THE STORY SHOULD LEAVE THE READER (emotional destination — not a plot instruction)
-${interview.destination}
-
-Remember: change the surface, keep the emotional core. The teen will read this as a normal bedtime story.`
-}
-
-function buildTeenPrompt(setup: Setup, theme: string): string {
-  const friendsStr = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
-  const sketch = sanitizeSketch(setup.characterSketch || '')
-
-  return `Write an original short story for a teen using the following as your brief.
-
-MAIN CHARACTER
-Name: ${setup.name}
-${sketch ? `Personality / details (use as light texture only, never as identity labels): ${sketch}` : ''}
-
-FRIENDS WHO APPEAR IN THE STORY (names only — do not describe or label them)
-${friendsStr}
-
-EMOTIONAL THEME (do not name this theme in the story — let the situation carry it)
-${theme}
-
-EMOTIONAL DESTINATION
-A warm, quiet resolution. The character doesn't solve the problem — they find a way to hold it differently.
-
-Write 1200–1500 words. Develop each scene fully. Do not rush. The story should feel pulled from a shelf — textured, specific, real. No moralizing.`
-}
-
-// Strip phrases that could introduce racial/ethnic framing into the prompt.
-// The model should never receive identity descriptors — only personality/habit details.
-const IDENTITY_PATTERN = /\b(indian|chinese|japanese|korean|filipino|hispanic|latino|latina|latinx|black|white|asian|african|caucasian|mixed.?race|biracial|multiracial|american|european|descent|heritage|ethnicity|ethnic|nationality|race|tall|short|thin|fat|skinny|chubby|petite|towering|tiny|small|big|wavy.?hair|curly.?hair|straight.?hair|long.?hair|short.?hair|medium.?hair)\b/gi
-
-function sanitizeSketch(sketch: string): string {
-  return sketch.replace(IDENTITY_PATTERN, '').replace(/\s{2,}/g, ' ').trim()
-}
+import { SYSTEM_PROMPT, buildParentPrompt, buildTeenPrompt } from './prompt'
+import { MODELS, ANTHROPIC_VERSION, OLLAMA_DEFAULT_URL } from './constants'
 
 // Words that prove a title is an incomplete sentence fragment.
 const TRAILING_CONNECTOR = /\b(and|or|but|the|a|an|of|in|on|at|to|for|with|by|from|that|which|this|its|their|his|her|our|your|my|as|if|when|where|while|though|although|because|since|until|unless|after|before|between|within|without|over|under|through|across|against|along|around|near|toward|upon|amid|despite|during|per|than|then|via)\s*[,.]?\s*$/i
 
-// Returns false when the title is clearly wrong:
-//   • ends with a connector word (sentence fragment)
-//   • is identical to the opening words of the content (model put the first sentence on line 1)
 function isTitleComplete(title: string, content: string): boolean {
   if (!title || title.trim().length < 2) return false
   if (TRAILING_CONNECTOR.test(title.trim())) return false
-  // Check if title is just the start of the story (model ignored the format)
   const t = title.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 4).join(' ')
   const c = content.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 6).join(' ')
   if (t.length > 6 && c.startsWith(t)) return false
   return true
 }
 
-// Last-resort: ask the model to produce only a title given the opening sentence.
-// Keeps the system prompt minimal so even Gemma reliably returns just the title.
-async function generateTitleOnly(firstSentence: string, setup: Setup): Promise<string> {
-  const system = 'You write short story titles. Reply with ONLY the title — 2 to 5 words, a complete phrase, no punctuation at the end. Nothing else.'
-  const user = `Opening sentence of a teen short story:\n"${firstSentence}"\n\nWrite the title.`
-  try {
-    let raw: string
-    if (setup.useLocal) {
-      raw = await callOllama(setup.ollamaUrl || 'http://localhost:11434', setup.ollamaModel || 'mistral', system, user)
-    } else if (setup.provider === 'claude') {
-      raw = await callClaude(setup.apiKey, system, user)
-    } else {
-      raw = await callOpenAI(setup.apiKey, system, user)
-    }
-    // Strip quotes/asterisks the model sometimes wraps around the title
-    const cleaned = raw.trim().replace(/^["'*]+|["'*]+$/g, '').replace(/^\*+|\*+$/g, '').trim()
-    // Accept if it looks like a real title (not another fragment)
-    if (cleaned && !TRAILING_CONNECTOR.test(cleaned)) return cleaned
-  } catch { /* fall through */ }
-  return 'Tonight\'s Story'
-}
-
 function parseResponse(text: string): { title: string; content: string } {
   const lines = text.trim().split('\n')
   let title = lines[0].trim()
-
-  // Strip common model prefixes
   title = title.replace(/^(title|story title|title:)\s*/i, '').replace(/^\*+|\*+$/g, '').trim()
 
-  // If the "title" is a full sentence (>8 words or >60 chars), the model
-  // used the opening line as a title. Extract a short poetic title from
-  // the first few meaningful words instead and keep the full line in content.
   const wordCount = title.split(/\s+/).length
   if (wordCount > 8 || title.length > 60) {
-    // Derive a short title: first 4–5 words, trim trailing punctuation
     const shortTitle = title.split(/\s+/).slice(0, 5).join(' ').replace(/[,;:.!?]+$/, '')
-    // Put the full opening line back into the content
-    const content = lines.join('\n').trim()
-    return { title: shortTitle, content }
+    return { title: shortTitle, content: lines.join('\n').trim() }
   }
 
-  // Find where actual content starts (skip blank lines after title)
   let contentStart = 1
-  while (contentStart < lines.length && lines[contentStart].trim() === '') {
-    contentStart++
-  }
-  const content = lines.slice(contentStart).join('\n').trim()
-  return { title, content }
+  while (contentStart < lines.length && lines[contentStart].trim() === '') contentStart++
+  return { title, content: lines.slice(contentStart).join('\n').trim() }
 }
 
-async function callClaude(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+// ── Provider adapters ─────────────────────────────────────────────────────────
+
+async function callClaude(apiKey: string, system: string, user: string): Promise<string> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+      'anthropic-version': ANTHROPIC_VERSION,
       'content-type': 'application/json',
       'anthropic-dangerous-direct-browser-calls': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: MODELS.claudeSonnet,
       max_tokens: 2500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
+      system,
+      messages: [{ role: 'user', content: user }],
     }),
   })
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
-    throw new Error((err as { error?: { message?: string } }).error?.message || `Claude API error: ${response.status}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(err.error?.message || `Claude API error: ${res.status}`)
   }
-  const data = await response.json() as { content: Array<{ text: string }> }
+  const data = await res.json() as { content: Array<{ text: string }> }
   return data.content[0].text
 }
 
-async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callOpenAI(apiKey: string, system: string, user: string): Promise<string> {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+      model: MODELS.openaiChat,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   })
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
-    throw new Error((err as { error?: { message?: string } }).error?.message || `OpenAI API error: ${response.status}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(err.error?.message || `OpenAI API error: ${res.status}`)
   }
-  const data = await response.json() as { choices: Array<{ message: { content: string } }> }
+  const data = await res.json() as { choices: Array<{ message: { content: string } }> }
   return data.choices[0].message.content
 }
 
-async function callOllama(ollamaUrl: string, model: string, systemPrompt: string, userPrompt: string): Promise<string> {
-  const url = ollamaUrl.replace(/\/$/, '') + '/api/chat'
-  const response = await fetch(url, {
+async function callOllama(url: string, model: string, system: string, user: string): Promise<string> {
+  const res = await fetch(url.replace(/\/$/, '') + '/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: model || 'mistral',
+      model,
       stream: false,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   })
-  if (!response.ok) {
-    throw new Error(`Ollama error: ${response.status} — check that the model name matches 'ollama list' exactly`)
-  }
-  const data = await response.json() as { message: { content: string } }
+  if (!res.ok) throw new Error(`Ollama error: ${res.status} — check that the model name matches 'ollama list' exactly`)
+  const data = await res.json() as { message: { content: string } }
   return data.message.content
 }
+
+// Single dispatch — used by both generation and title-only fallback.
+function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'apiKey' | 'ollamaUrl' | 'ollamaModel'>, system: string, user: string): Promise<string> {
+  if (setup.useLocal)
+    return callOllama(setup.ollamaUrl || OLLAMA_DEFAULT_URL, setup.ollamaModel || MODELS.ollamaDefault, system, user)
+  if (setup.provider === 'claude')
+    return callClaude(setup.apiKey, system, user)
+  return callOpenAI(setup.apiKey, system, user)
+}
+
+// Last-resort title repair — targets only the title without re-generating the story.
+async function generateTitleOnly(firstSentence: string, setup: Setup): Promise<string> {
+  const system = 'You write short story titles. Reply with ONLY the title — 2 to 5 words, a complete phrase, no punctuation at the end. Nothing else.'
+  const user   = `Opening sentence of a teen short story:\n"${firstSentence}"\n\nWrite the title.`
+  try {
+    const raw     = await callLLM(setup, system, user)
+    const cleaned = raw.trim().replace(/^["'*]+|["'*]+$/g, '').trim()
+    if (cleaned && !TRAILING_CONNECTOR.test(cleaned)) return cleaned
+  } catch { /* fall through */ }
+  return "Tonight's Story"
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
 
 export async function generateStory(params: {
   setup: Setup
   mode: 'parent' | 'teen'
   interview?: ParentInterview
   theme?: string
-  onProgress?: (text: string) => void
   onInputSanitized?: () => void
 }): Promise<{ title: string; content: string }> {
   const { setup, mode, theme } = params
 
-  // Sanitize interview inputs before they reach the prompt
   let interview = params.interview
   if (mode === 'parent' && interview) {
     const fields: (keyof ParentInterview)[] = ['moment', 'whoNote', 'emotionNote', 'destination']
@@ -263,49 +133,29 @@ export async function generateStory(params: {
         if (result.wasFlagged) { wasFlagged = true; (cleaned as Record<string, unknown>)[field] = result.text }
       }
     }
-    if (wasFlagged) {
-      interview = cleaned
-      params.onInputSanitized?.()
-    }
+    if (wasFlagged) { interview = cleaned; params.onInputSanitized?.() }
   }
 
   const userPrompt = mode === 'parent' && interview
     ? buildParentPrompt(setup, interview)
     : buildTeenPrompt(setup, theme || 'Just somewhere else')
 
-  async function callProvider(): Promise<string> {
-    if (setup.useLocal) {
-      return callOllama(setup.ollamaUrl || 'http://localhost:11434', setup.ollamaModel || 'mistral', SYSTEM_PROMPT, userPrompt)
-    } else if (setup.provider === 'claude') {
-      return callClaude(setup.apiKey, SYSTEM_PROMPT, userPrompt)
-    } else {
-      return callOpenAI(setup.apiKey, SYSTEM_PROMPT, userPrompt)
-    }
-  }
-
   const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider, apiKey: setup.apiKey }
 
-  const MAX_ATTEMPTS = 3
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const rawText = await callProvider()
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const raw = await callLLM(setup, SYSTEM_PROMPT, userPrompt)
 
-    // Layer 1: safety
-    const { safe } = await checkSafetySmart(rawText, safetyOpts)
+    const { safe } = await checkSafetySmart(raw, safetyOpts)
     if (!safe) {
-      if (attempt === MAX_ATTEMPTS - 1)
-        throw new Error("The story contained content that isn't appropriate for this app. Please try again.")
+      if (attempt === 2) throw new Error("The story contained content that isn't appropriate for this app. Please try again.")
       continue
     }
 
-    // Layer 2: title completeness
-    const parsed = parseResponse(rawText)
+    const parsed = parseResponse(raw)
     if (!isTitleComplete(parsed.title, parsed.content)) {
-      if (attempt < MAX_ATTEMPTS - 1) continue  // retry full generation
-
-      // All retries exhausted — fix the title with a targeted call rather than failing
+      if (attempt < 2) continue
       const firstSentence = parsed.content.split(/(?<=[.!?])\s/)[0].trim()
-      const fixedTitle = await generateTitleOnly(firstSentence, setup)
-      return { ...parsed, title: fixedTitle }
+      return { ...parsed, title: await generateTitleOnly(firstSentence, setup) }
     }
 
     return parsed

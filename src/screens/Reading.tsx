@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Icon } from '../components/Icon'
 import { paginateStory } from '../lib/utils'
 import type { Story } from '../types'
@@ -53,7 +53,7 @@ export function Reading({
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
-  const pages = paginateStory(story.content)
+  const pages = useMemo(() => paginateStory(story.content), [story.content])
   const totalPages = pages.length
   const currentPageText = pages[page] || ''
 
@@ -64,14 +64,11 @@ export function Reading({
     }
   }, [])
 
-  // When page changes, stop speech
+  // When page changes, stop speech (cancel is a no-op when nothing is playing)
   useEffect(() => {
-    if (isSpeaking || isPaused) {
-      window.speechSynthesis?.cancel()
-      setIsSpeaking(false)
-      setIsPaused(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    window.speechSynthesis?.cancel()
+    setIsSpeaking(false)
+    setIsPaused(false)
   }, [page])
 
   function speakPage(text: string) {

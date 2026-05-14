@@ -1,5 +1,14 @@
 import React from 'react'
 
+const labelStyle: React.CSSProperties = {
+  fontFamily: 'var(--sans)',
+  fontSize: 12,
+  fontWeight: 500,
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  color: 'var(--ink50)',
+}
+
 interface FieldProps {
   label: string
   value: string
@@ -7,24 +16,14 @@ interface FieldProps {
   placeholder?: string
   maxLength?: number
   type?: string
+  error?: string
   style?: React.CSSProperties
 }
 
-export function Field({ label, value, onChange, placeholder, maxLength, type = 'text', style }: FieldProps) {
+export function Field({ label, value, onChange, placeholder, maxLength, type = 'text', error, style }: FieldProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, ...style }}>
-      <label
-        style={{
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: 12,
-          fontWeight: 500,
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          color: '#76705f',
-        }}
-      >
-        {label}
-      </label>
+      <label style={labelStyle}>{label}</label>
       <input
         type={type}
         value={value}
@@ -35,14 +34,15 @@ export function Field({ label, value, onChange, placeholder, maxLength, type = '
           width: '100%',
           padding: '12px 14px',
           borderRadius: 12,
-          border: '1px solid #dfd5bd',
-          backgroundColor: '#f3ead8',
-          fontFamily: "'DM Sans', sans-serif",
+          border: `1px solid ${error ? 'var(--accent2)' : 'var(--ink15)'}`,
+          backgroundColor: 'var(--bg2)',
+          fontFamily: 'var(--sans)',
           fontSize: 15,
-          color: '#1f1b16',
+          color: 'var(--ink)',
           appearance: 'none',
         }}
       />
+      {error && <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--accent2)' }}>{error}</span>}
     </div>
   )
 }
@@ -53,27 +53,15 @@ interface TextareaFieldProps {
   onChange: (v: string) => void
   placeholder?: string
   minHeight?: number
+  italic?: boolean
+  flex?: boolean
   style?: React.CSSProperties
-  fontFamily?: string
 }
 
-export function TextareaField({ label, value, onChange, placeholder, minHeight = 120, style, fontFamily }: TextareaFieldProps) {
+export function TextareaField({ label, value, onChange, placeholder, minHeight = 120, italic, flex, style }: TextareaFieldProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, ...style }}>
-      {label && (
-        <label
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 12,
-            fontWeight: 500,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            color: '#76705f',
-          }}
-        >
-          {label}
-        </label>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, ...(flex ? { flex: 1 } : {}), ...style }}>
+      {label && <label style={labelStyle}>{label}</label>}
       <textarea
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -82,13 +70,15 @@ export function TextareaField({ label, value, onChange, placeholder, minHeight =
           width: '100%',
           padding: '14px 16px',
           borderRadius: 12,
-          border: '1px solid #dfd5bd',
-          backgroundColor: '#f3ead8',
-          fontFamily: fontFamily || "'Newsreader', Georgia, serif",
+          border: '1px solid var(--ink15)',
+          backgroundColor: 'var(--bg2)',
+          fontFamily: 'var(--serif)',
+          fontStyle: italic ? 'italic' : 'normal',
           fontSize: 15,
           lineHeight: 1.5,
-          color: '#1f1b16',
+          color: 'var(--ink)',
           minHeight,
+          ...(flex ? { flex: 1 } : {}),
         }}
       />
     </div>

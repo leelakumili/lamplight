@@ -12,6 +12,7 @@ export function Chip({ label, active = false, onToggle, onRemove, style }: ChipP
   return (
     <div
       onClick={onToggle}
+      role={onToggle ? 'button' : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -19,12 +20,12 @@ export function Chip({ label, active = false, onToggle, onRemove, style }: ChipP
         padding: '6px 12px',
         borderRadius: 20,
         fontSize: 13,
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: 'var(--sans)',
         fontWeight: 500,
         cursor: onToggle ? 'pointer' : 'default',
-        backgroundColor: active ? '#1f1b16' : '#f3ead8',
-        color: active ? '#faf4e8' : '#3e3830',
-        border: `1px solid ${active ? '#1f1b16' : '#dfd5bd'}`,
+        backgroundColor: active ? 'var(--ink)' : 'var(--bg2)',
+        color: active ? 'var(--bg)' : 'var(--ink70)',
+        border: `1px solid ${active ? 'var(--ink)' : 'var(--ink15)'}`,
         transition: 'all 0.15s ease',
         userSelect: 'none',
         ...style,
@@ -34,21 +35,11 @@ export function Chip({ label, active = false, onToggle, onRemove, style }: ChipP
       {onRemove && (
         <button
           onClick={e => { e.stopPropagation(); onRemove() }}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            color: active ? '#faf4e8' : '#76705f',
-            marginLeft: 2,
-          }}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'inherit', marginLeft: 2, opacity: 0.7 }}
           aria-label={`Remove ${label}`}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       )}

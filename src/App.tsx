@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from 'react'
+import React, { useReducer, useEffect, useState, useMemo } from 'react'
 import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
 import { saveSetup, loadSetup, saveStory, loadStories, deleteStory, saveProfiles, loadProfiles, saveActiveProfileId, loadActiveProfileId } from './lib/db'
 import { getStoredTheme, applyTheme, type AppTheme } from './lib/theme'
@@ -41,8 +41,6 @@ const initialState: AppState = {
   readerFontSize: 18,
   readerTheme: 'midnight',
   readerFontFamily: 'serif',
-  generationError: null,
-  currentMode: null,
   profiles: [],
   activeProfileId: null,
 }
@@ -69,8 +67,6 @@ function reducer(state: AppState, action: AppAction): AppState {
       return { ...state, readerTheme: action.theme }
     case 'SET_READER_FONT_FAMILY':
       return { ...state, readerFontFamily: action.family }
-    case 'SET_GENERATION_ERROR':
-      return { ...state, generationError: action.error }
     case 'LOAD_HISTORY':
       return { ...state, history: action.stories }
     case 'DELETE_STORY':
@@ -86,8 +82,6 @@ function reducer(state: AppState, action: AppAction): AppState {
         currentStory: state.currentStory?.id === action.id ? updatedStory : state.currentStory,
       }
     }
-    case 'SET_MODE':
-      return { ...state, currentMode: action.mode }
     case 'SET_PROFILES':
       return { ...state, profiles: action.profiles, activeProfileId: action.activeProfileId }
     case 'SET_ACTIVE_PROFILE':
@@ -180,10 +174,8 @@ export default function App() {
     nav('home')
   }
 
-  // Merge active profile (name, age, friends, sketch) into setup for generation.
-  // Falls back to the main setup fields if the profile field is empty.
-  function getEffectiveSetup(): Setup {
-    if (!state.setup) return state.setup!
+  const effectiveSetup = useMemo((): Setup | null => {
+    if (!state.setup) return null
     const profile = state.profiles.find(p => p.id === state.activeProfileId)
     if (!profile) return state.setup
     return {
@@ -193,11 +185,10 @@ export default function App() {
       friends: profile.friends.length > 0 ? profile.friends : state.setup.friends,
       characterSketch: profile.characterSketch || state.setup.characterSketch,
     }
-  }
+  }, [state.setup, state.profiles, state.activeProfileId])
 
   async function startGeneration(mode: 'parent' | 'teen') {
-    if (!state.setup) return
-    const effectiveSetup = getEffectiveSetup()
+    if (!effectiveSetup) return
     nav('loading')
 
     try {
@@ -309,14 +300,8 @@ export default function App() {
             history={history}
             profiles={profiles}
             activeProfileId={activeProfileId}
-            onParentEntry={() => {
-              dispatch({ type: 'SET_MODE', mode: 'parent' })
-              nav('parent-q1')
-            }}
-            onTeenEntry={() => {
-              dispatch({ type: 'SET_MODE', mode: 'teen' })
-              nav('teen-themes')
-            }}
+            onParentEntry={() => nav('parent-q1')}
+            onTeenEntry={() => nav('teen-themes')}
             onSettings={() => nav('settings')}
             onOpenStory={story => {
               dispatch({ type: 'SET_CURRENT_STORY', story })
@@ -340,11 +325,10 @@ export default function App() {
           />
         ) : null
 
-      case 'parent-q1': {
-        const es1 = getEffectiveSetup()
-        return setup ? (
+      case 'parent-q1':
+        return effectiveSetup ? (
           <ParentQ1
-            name={es1.name}
+            name={effectiveSetup.name}
             moment={interview.moment}
             onBack={() => nav('home')}
             onContinue={moment => {
@@ -354,13 +338,11 @@ export default function App() {
             onSkip={() => nav('parent-q2')}
           />
         ) : null
-      }
 
-      case 'parent-q2': {
-        const es2 = getEffectiveSetup()
-        return setup ? (
+      case 'parent-q2':
+        return effectiveSetup ? (
           <ParentQ2
-            friends={es2.friends}
+            friends={effectiveSetup.friends}
             whoWasThere={interview.whoWasThere}
             whoNote={interview.whoNote}
             onBack={() => nav('parent-q1')}
@@ -371,13 +353,11 @@ export default function App() {
             onSkip={() => nav('parent-q3')}
           />
         ) : null
-      }
 
-      case 'parent-q3': {
-        const es3 = getEffectiveSetup()
-        return setup ? (
+      case 'parent-q3':
+        return effectiveSetup ? (
           <ParentQ3
-            name={es3.name}
+            name={effectiveSetup.name}
             emotions={interview.emotions}
             emotionNote={interview.emotionNote}
             onBack={() => nav('parent-q2')}
@@ -388,7 +368,6 @@ export default function App() {
             onSkip={() => nav('parent-q4')}
           />
         ) : null
-      }
 
       case 'parent-q4':
         return (
@@ -403,11 +382,10 @@ export default function App() {
           />
         )
 
-      case 'teen-themes': {
-        const est = getEffectiveSetup()
-        return setup ? (
+      case 'teen-themes':
+        return effectiveSetup ? (
           <TeenThemes
-            name={est.name}
+            name={effectiveSetup.name}
             onBack={() => nav('home')}
             onSelect={theme => {
               dispatch({ type: 'SET_SELECTED_THEME', theme })
@@ -415,7 +393,6 @@ export default function App() {
             }}
           />
         ) : null
-      }
 
       case 'loading':
         return (

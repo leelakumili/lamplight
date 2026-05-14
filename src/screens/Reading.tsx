@@ -23,99 +23,10 @@ const THEME_COLORS = {
   midnight: { bg: '#15182a', text: '#e9dfc9', scene1: '#0f1020', scene2: '#15182a', scene3: '#1c2138' },
 }
 
-const SCENE_PALETTES = {
-  midnight: { sky: '#1c2138', mid: '#2a3052', low: '#3c3a4f', ground: '#0f1020', glow: '#c9924a', silhouette: '#080c16' },
-  sepia:    { sky: '#2a1e0e', mid: '#3a2a14', low: '#2e2010', ground: '#1a1008', glow: '#d4a056', silhouette: '#120c04' },
-  cream:    { sky: '#b8ccdc', mid: '#d4c8a8', low: '#c8bc98', ground: '#b0a888', glow: '#c9924a', silhouette: '#8c7e60' },
-}
-
-function ImmersiveScene({ theme }: { theme: 'cream' | 'sepia' | 'midnight' }) {
-  const p = SCENE_PALETTES[theme]
-  const isDark = theme !== 'cream'
-
-  return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      {/* Sky → mid → low gradient */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `linear-gradient(180deg, ${p.sky} 0%, ${p.mid} 55%, ${p.low} 100%)`,
-        }}
-      />
-
-      {/* Warm glow — moon/lamp source, upper right */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '8%',
-          right: '18%',
-          width: 260,
-          height: 260,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${p.glow}55 0%, ${p.glow}22 45%, transparent 70%)`,
-          filter: 'blur(4px)',
-        }}
-      />
-      {/* Bright core of the glow */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '11%',
-          right: '24%',
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${p.glow}99 0%, ${p.glow}33 60%, transparent 80%)`,
-        }}
-      />
-
-      {/* Horizon line */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: '32%',
-          height: 1,
-          background: isDark ? 'rgba(229,181,116,0.18)' : 'rgba(31,27,22,0.14)',
-        }}
-      />
-
-      {/* SVG rooftop silhouette */}
-      <svg
-        style={{ position: 'absolute', bottom: '28%', left: 0, width: '100%', height: 110 }}
-        viewBox="0 0 430 110"
-        preserveAspectRatio="none"
-        fill={p.silhouette}
-      >
-        <path d="M0 110 L0 75 L25 75 L25 52 L55 28 L85 52 L85 68 L125 68 L125 42 L155 18 L185 42 L185 68 L215 68 L215 48 L238 24 L258 48 L258 63 L285 63 L285 48 L308 28 L328 48 L328 75 L358 75 L358 52 L385 38 L415 52 L415 75 L430 75 L430 110 Z" />
-      </svg>
-
-      {/* Ground */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '28%',
-          backgroundColor: p.ground,
-          background: `repeating-linear-gradient(0deg, ${p.ground}, ${p.ground} 3px, transparent 3px, transparent 14px), ${p.ground}`,
-          opacity: isDark ? 1 : 0.6,
-        }}
-      />
-
-      {/* Vignette edges */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `radial-gradient(ellipse at 50% 40%, transparent 35%, ${isDark ? 'rgba(5,6,14,0.65)' : 'rgba(20,16,10,0.35)'} 100%)`,
-        }}
-      />
-    </div>
-  )
+const THEME_BG: Record<'cream' | 'sepia' | 'midnight', string> = {
+  midnight: 'linear-gradient(180deg, #15182a 0%, #1c2138 100%)',
+  sepia:    'linear-gradient(180deg, #1e1708 0%, #2a2010 100%)',
+  cream:    'linear-gradient(180deg, #faf4e8 0%, #f3ead8 100%)',
 }
 
 export function Reading({
@@ -159,12 +70,11 @@ export function Reading({
         minHeight: '100dvh',
         position: 'relative',
         overflow: 'hidden',
+        background: THEME_BG[theme],
         animation: 'st-fade-in 0.4s ease both',
       }}
       onClick={handleTap}
     >
-      {/* Scene background */}
-      <ImmersiveScene theme={theme} />
 
       {/* Chrome pills top */}
       <div

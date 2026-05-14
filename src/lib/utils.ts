@@ -23,7 +23,7 @@ export function getGreeting(): { label: string; time: string } {
   }
 }
 
-export function paginateStory(content: string, wordsPerPage = 300): string[] {
+export function paginateStory(content: string, wordsPerPage = 220): string[] {
   const paragraphs = content.split(/\n\n+/).filter(p => p.trim().length > 0)
   const pages: string[] = []
   let currentPage: string[] = []

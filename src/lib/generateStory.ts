@@ -28,7 +28,7 @@ STORY STRUCTURE — follow this arc:
 CRAFT:
 - Names are just names. Do not attach labels or descriptions to them.
 - Friends enter scenes because the scene needs them, not to be introduced.
-- 600–900 words. Plain prose. No headers, no asterisks, no markdown.
+- 1200–1500 words. Plain prose. No headers, no asterisks, no markdown. Develop each beat fully — do not rush the story.
 
 Output format: Story title on line 1. Two blank lines. Then the story. Nothing else.`
 
@@ -82,7 +82,7 @@ ${theme}
 EMOTIONAL DESTINATION
 A warm, quiet resolution. The character doesn't solve the problem — they find a way to hold it differently.
 
-Write a story that feels pulled from a shelf. Textured, specific, real. No moralizing.`
+Write 1200–1500 words. Develop each scene fully. Do not rush. The story should feel pulled from a shelf — textured, specific, real. No moralizing.`
 }
 
 // Strip phrases that could introduce racial/ethnic framing into the prompt.
@@ -118,7 +118,7 @@ async function callClaude(apiKey: string, systemPrompt: string, userPrompt: stri
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
+      max_tokens: 2500,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     }),

@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from 'react'
 
+const PHRASES = [
+  { main: 'Lining up the streetlamps,', em: 'finding the right way in…' },
+  { main: 'Choosing the right Tuesday,', em: 'the one that holds the most.' },
+  { main: 'Setting the scene,', em: 'getting the light exactly wrong first…' },
+  { main: 'Finding the sentence', em: 'that only she could say.' },
+  { main: 'Picking up the thread,', em: 'following it somewhere true.' },
+  { main: 'Listening for the detail', em: 'that makes it real.' },
+  { main: 'Writing the moment', em: 'just before everything shifts.' },
+  { main: 'Getting the ending right,', em: 'then a little more right.' },
+]
+
 interface LoadingProps {
   onTimeout?: () => void
 }
 
 export function Loading({ onTimeout }: LoadingProps) {
   const [longWait, setLongWait] = useState(false)
+  const [phraseIndex, setPhraseIndex] = useState(0)
+  const [visible, setVisible] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => setLongWait(true), 45000)
@@ -14,12 +27,24 @@ export function Loading({ onTimeout }: LoadingProps) {
 
   useEffect(() => {
     if (!onTimeout) return
-    const timer = setTimeout(() => {
-      // If still loading after 90 seconds, signal timeout
-      onTimeout()
-    }, 90000)
+    const timer = setTimeout(() => onTimeout(), 90000)
     return () => clearTimeout(timer)
   }, [onTimeout])
+
+  // Cycle through phrases with a fade transition
+  useEffect(() => {
+    if (longWait) return
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setPhraseIndex(i => (i + 1) % PHRASES.length)
+        setVisible(true)
+      }, 500)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [longWait])
+
+  const phrase = PHRASES[phraseIndex]
 
   return (
     <div
@@ -35,30 +60,25 @@ export function Loading({ onTimeout }: LoadingProps) {
       }}
     >
       {/* Breathing orb */}
-      <div
-        style={{
-          width: 120,
-          height: 120,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, #e5b574, #a35d3a 70%, transparent 75%)',
-          filter: 'blur(2px)',
-          opacity: 0.85,
-          animation: 'st-breath 4.5s ease-in-out infinite',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 36,
-          position: 'relative',
-        }}
-      >
+      <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 48 }}>
         <div
           style={{
             position: 'absolute',
-            width: 72,
-            height: 72,
+            inset: 0,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 35% 35%, #e5b574, #a35d3a 70%, transparent 75%)',
+            filter: 'blur(2px)',
+            opacity: 0.85,
+            animation: 'st-breath 4.5s ease-in-out infinite',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 24,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 40% 40%, #e5b574, #c9924a)',
-            boxShadow: '0 0 40px #c9924a',
+            boxShadow: '0 0 40px #c9924a88',
           }}
         />
       </div>
@@ -67,51 +87,73 @@ export function Loading({ onTimeout }: LoadingProps) {
       <div
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 500,
-          letterSpacing: '0.2em',
+          letterSpacing: '0.22em',
           textTransform: 'uppercase',
           color: '#e5b574',
-          marginBottom: 14,
+          marginBottom: 18,
         }}
       >
         Writing
       </div>
 
-      {/* Headline */}
-      <h2
+      {/* Cycling phrase */}
+      <div
         style={{
           fontFamily: "'Newsreader', Georgia, serif",
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: 400,
-          lineHeight: 1.25,
+          lineHeight: 1.3,
           color: '#e9dfc9',
           textAlign: 'center',
-          marginBottom: 16,
+          maxWidth: 300,
+          minHeight: 72,
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.5s ease',
         }}
       >
         {longWait ? (
-          'Still going. The good ones take a minute.'
+          <em style={{ color: '#e5b574' }}>Still going. The good ones take a minute.</em>
         ) : (
           <>
-            Lining up the streetlamps,{' '}
-            <em style={{ color: '#e5b574', fontStyle: 'italic' }}>finding the right way in…</em>
+            {phrase.main}{' '}
+            <em style={{ color: '#e5b574', fontStyle: 'italic' }}>{phrase.em}</em>
           </>
         )}
-      </h2>
+      </div>
+
+      {/* Progress dots */}
+      {!longWait && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 36 }}>
+          {PHRASES.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: i === phraseIndex ? 18 : 5,
+                height: 5,
+                borderRadius: 3,
+                backgroundColor: i === phraseIndex ? '#c9924a' : 'rgba(233,223,201,0.2)',
+                transition: 'width 0.4s ease, background-color 0.4s ease',
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Sub */}
       <p
         style={{
           fontFamily: "'DM Sans', sans-serif",
           fontSize: 13,
-          color: 'rgba(233,223,201,0.7)',
+          color: 'rgba(233,223,201,0.5)',
           textAlign: 'center',
           lineHeight: 1.55,
-          maxWidth: 280,
+          maxWidth: 260,
+          marginTop: 32,
         }}
       >
-        This usually takes about twenty seconds. There's no need to wait — we'll let you know.
+        Usually about twenty seconds.
       </p>
     </div>
   )

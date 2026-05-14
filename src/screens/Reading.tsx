@@ -41,11 +41,22 @@ export function Reading({
   onChangeFontFamily,
 }: ReadingProps) {
   const [page, setPage] = useState(0)
+  const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null)
   const [showTypeSheet, setShowTypeSheet] = useState(false)
 
   const pages = paginateStory(story.content)
   const totalPages = pages.length
   const currentPageText = pages[page] || ''
+
+  function goToPage(next: number) {
+    if (next < 0 || next > totalPages) return
+    setSlideDir(next > page ? 'left' : 'right')
+    setTimeout(() => {
+      setPage(next < totalPages ? next : page)
+      if (next >= totalPages) onDone()
+      setSlideDir(null)
+    }, 220)
+  }
 
   const colors = THEME_COLORS[theme]
   const ff = fontFamily === 'serif' ? "'Newsreader', Georgia, serif" : "'DM Sans', sans-serif"
@@ -54,10 +65,9 @@ export function Reading({
     const x = e.clientX
     const width = (e.currentTarget as HTMLElement).clientWidth
     if (x < width * 0.35) {
-      if (page > 0) setPage(p => p - 1)
+      if (page > 0) goToPage(page - 1)
     } else if (x > width * 0.65) {
-      if (page < totalPages - 1) setPage(p => p + 1)
-      else onDone()
+      goToPage(page + 1)
     }
   }
 
@@ -173,6 +183,9 @@ export function Reading({
             borderRadius: 22,
             padding: '20px 22px',
             boxShadow: '0 -4px 40px rgba(0,0,0,0.3)',
+            transform: slideDir === 'left' ? 'translateX(-18px)' : slideDir === 'right' ? 'translateX(18px)' : 'translateX(0)',
+            opacity: slideDir ? 0 : 1,
+            transition: slideDir ? 'transform 0.22s ease, opacity 0.22s ease' : 'none',
           }}
         >
           {/* Chapter label italic */}
@@ -193,11 +206,12 @@ export function Reading({
             <div
               style={{
                 fontFamily: "'Newsreader', Georgia, serif",
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: 500,
                 color: colors.text,
-                lineHeight: 1.3,
-                marginBottom: 12,
+                lineHeight: 1.25,
+                letterSpacing: '-0.01em',
+                marginBottom: 14,
               }}
             >
               {story.title}
@@ -209,18 +223,40 @@ export function Reading({
             style={{
               fontFamily: ff,
               fontSize,
-              lineHeight: 1.55,
+              lineHeight: 1.6,
               color: colors.text,
-              maxHeight: 260,
+              maxHeight: 280,
               overflowY: 'auto',
               marginBottom: 16,
             }}
           >
-            {currentPageText.split('\n\n').map((para, i) => (
-              <p key={i} style={{ marginBottom: i < currentPageText.split('\n\n').length - 1 ? '1em' : 0 }}>
-                {para}
-              </p>
-            ))}
+            {currentPageText.split('\n\n').map((para, i) => {
+              const isFirst = page === 0 && i === 0
+              const firstLetter = isFirst ? para.charAt(0) : ''
+              const rest = isFirst ? para.slice(1) : para
+              return (
+                <p key={i} style={{ marginBottom: i < currentPageText.split('\n\n').length - 1 ? '1em' : 0, overflow: 'hidden' }}>
+                  {isFirst && (
+                    <span
+                      style={{
+                        float: 'left',
+                        fontFamily: "'Newsreader', Georgia, serif",
+                        fontSize: fontSize * 3.2,
+                        lineHeight: 0.82,
+                        paddingRight: 6,
+                        paddingTop: 4,
+                        color: theme === 'cream' ? '#a35d3a' : '#e5b574',
+                        fontStyle: 'italic',
+                        fontWeight: 400,
+                      }}
+                    >
+                      {firstLetter}
+                    </span>
+                  )}
+                  {rest}
+                </p>
+              )
+            })}
           </div>
 
           {/* Footer */}
@@ -262,11 +298,7 @@ export function Reading({
 
             {/* Nav arrow */}
             <button
-              onClick={e => {
-                e.stopPropagation()
-                if (page < totalPages - 1) setPage(p => p + 1)
-                else onDone()
-              }}
+              onClick={e => { e.stopPropagation(); goToPage(page + 1) }}
               style={{
                 background: 'none',
                 border: 'none',

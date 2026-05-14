@@ -25,10 +25,15 @@ STORY STRUCTURE — follow this arc:
 4. Resolution — the emotional destination, not a plot solution.
 5. One closing sentence. A feeling, not a moral.
 
-CRAFT:
-- Names are just names. Do not attach labels or descriptions to them.
+CRAFT — this separates a memorable story from a forgettable one:
+- Names are just names. Do not attach labels to them.
 - Friends enter scenes because the scene needs them, not to be introduced.
-- 1200–1500 words. Plain prose. No headers, no asterisks, no markdown. Develop each beat fully — do not rush the story.
+- Use specific sensory detail: the smell of a gym bag, the sound of a chair scraping tile, a pencil eraser worn to nothing. Not "she felt nervous" — "her knee wouldn't stop bouncing."
+- Vary sentence rhythm deliberately. Short sentences land hard. Longer ones carry the reader through a moment that hasn't resolved yet, letting them feel the weight of waiting alongside the character. Alternate them.
+- Include one image or line that stays with the reader after the story ends — something small and true that holds the whole feeling.
+- Surprise the reader once. Not a plot twist — an unexpected detail, a line of dialogue, a moment they didn't see coming but immediately recognise as real.
+- Dialogue sounds like actual teens: incomplete sentences, subject changes mid-thought, things left unsaid on purpose.
+- 1200–1500 words. Develop each beat fully. Do not rush.
 
 Output format: Story title on line 1. Two blank lines. Then the story. Nothing else.`
 

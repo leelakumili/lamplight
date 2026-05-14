@@ -5,6 +5,7 @@ import { getStoredTheme, applyTheme, type AppTheme } from './lib/theme'
 import { generateStory } from './lib/generateStory'
 import { generateIllustration } from './lib/illustration'
 import { generateId } from './lib/utils'
+import { ILLUSTRATION_TIMEOUT_MS } from './lib/constants'
 import type { Profile } from './types'
 
 // Screens
@@ -231,7 +232,7 @@ export default function App() {
       // Aborts after 30s; skips update if the story was deleted before it finishes.
       if (!effectiveSetup.useLocal) {
         const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 30_000)
+        const timeout = setTimeout(() => controller.abort(), ILLUSTRATION_TIMEOUT_MS)
         const storyId = story.id
         generateIllustration(story, effectiveSetup, controller.signal)
           .then(illustration => {
@@ -450,6 +451,7 @@ export default function App() {
             onChangeTheme={theme => dispatch({ type: 'SET_READER_THEME', theme })}
             onChangeFontFamily={family => dispatch({ type: 'SET_READER_FONT_FAMILY', family })}
             onToggleBookmark={() => currentStory && toggleBookmark(currentStory.id)}
+            onToast={showToast}
           />
         ) : null
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { getGreeting, formatStoryAge, generateId } from '../lib/utils'
 import type { Setup, Story, Profile } from '../types'
@@ -20,13 +20,13 @@ interface HomeProps {
 interface StoryRowProps {
   story: Story
   isConfirming: boolean
-  onOpen: () => void
-  onRequestDelete: () => void
-  onConfirmDelete: () => void
+  onOpen: (id: string) => void
+  onRequestDelete: (id: string) => void
+  onConfirmDelete: (id: string) => void
   onCancelDelete: () => void
 }
 
-function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelete, onCancelDelete }: StoryRowProps) {
+const StoryRow = React.memo(function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelete, onCancelDelete }: StoryRowProps) {
   const touchStartX = useRef(0)
 
   function handleTouchStart(e: React.TouchEvent) {
@@ -63,7 +63,7 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
           Keep
         </button>
         <button
-          onClick={onConfirmDelete}
+          onClick={() => onConfirmDelete(story.id)}
           style={{ height: 34, padding: '0 14px', borderRadius: 10, border: 'none', backgroundColor: 'var(--accent2)', fontFamily: "var(--sans)", fontSize: 13, fontWeight: 500, color: 'var(--bg)', cursor: 'pointer' }}
         >
           Delete
@@ -79,7 +79,7 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
       onTouchEnd={handleTouchEnd}
     >
       <button
-        onClick={onOpen}
+        onClick={() => onOpen(story.id)}
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 14, backgroundColor: 'var(--bg2)', border: 'none', cursor: 'pointer', textAlign: 'left' }}
       >
         <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -110,7 +110,7 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
       </button>
 
       <button
-        onClick={e => { e.stopPropagation(); onRequestDelete() }}
+        onClick={e => { e.stopPropagation(); onRequestDelete(story.id) }}
         title="Delete story"
         style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0, transition: 'opacity 0.15s' }}
         onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
@@ -120,7 +120,7 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
       </button>
     </div>
   )
-}
+})
 
 export function Home({ setup, history, profiles, activeProfileId, onParentEntry, onTeenEntry, onSettings, onOpenStory, onDeleteStory, onSetActiveProfile, onAddProfile }: HomeProps) {
   const [greeting, setGreeting] = useState(getGreeting())
@@ -137,6 +137,18 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
 
   const visibleStories = showAllStories ? history : history.slice(0, 3)
   const activeProfile = profiles.find(p => p.id === activeProfileId)
+
+  const handleStoryOpen = useCallback((id: string) => {
+    const story = history.find(s => s.id === id)
+    if (story) onOpenStory(story)
+  }, [history, onOpenStory])
+
+  const handleRequestDelete = useCallback((id: string) => setDeletingId(id), [])
+  const handleConfirmDelete = useCallback((id: string) => {
+    onDeleteStory(id)
+    setDeletingId(null)
+  }, [onDeleteStory])
+  const handleCancelDelete = useCallback(() => setDeletingId(null), [])
   const displayName = activeProfile?.name || setup.name
 
   function handleAddProfile() {
@@ -277,10 +289,10 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
                   key={story.id}
                   story={story}
                   isConfirming={deletingId === story.id}
-                  onOpen={() => onOpenStory(story)}
-                  onRequestDelete={() => setDeletingId(story.id)}
-                  onConfirmDelete={() => { onDeleteStory(story.id); setDeletingId(null) }}
-                  onCancelDelete={() => setDeletingId(null)}
+                  onOpen={handleStoryOpen}
+                  onRequestDelete={handleRequestDelete}
+                  onConfirmDelete={handleConfirmDelete}
+                  onCancelDelete={handleCancelDelete}
                 />
               ))}
             </div>

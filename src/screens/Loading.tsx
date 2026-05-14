@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { GENERATION_LONG_WAIT_MS, GENERATION_TIMEOUT_MS } from '../lib/constants'
 
 const PHRASES = [
   { main: 'Lining up the streetlamps,', em: 'finding the right way in…' },
@@ -21,13 +22,13 @@ export function Loading({ onTimeout }: LoadingProps) {
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLongWait(true), 45000)
+    const timer = setTimeout(() => setLongWait(true), GENERATION_LONG_WAIT_MS)
     return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
     if (!onTimeout) return
-    const timer = setTimeout(() => onTimeout(), 90000)
+    const timer = setTimeout(() => onTimeout(), GENERATION_TIMEOUT_MS)
     return () => clearTimeout(timer)
   }, [onTimeout])
 

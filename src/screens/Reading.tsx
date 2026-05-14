@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Icon } from '../components/Icon'
 import { paginateStory } from '../lib/utils'
+import { BOOKMARK_TOAST_MS } from '../lib/constants'
 import type { Story } from '../types'
 
 interface ReadingProps {
@@ -15,19 +16,20 @@ interface ReadingProps {
   onChangeTheme: (t: 'cream' | 'sepia' | 'midnight') => void
   onChangeFontFamily: (f: 'serif' | 'sans') => void
   onToggleBookmark: () => void
+  onToast: (msg: string, duration?: number) => void
 }
 
 const FONT_SIZES = [16, 18, 20, 22, 24]
 
 const THEME_COLORS = {
-  cream:    { bg: 'var(--bg)',     text: 'var(--ink)' },
-  sepia:    { bg: '#2a2218',       text: 'var(--dark-ink)' },
-  midnight: { bg: 'var(--dark-bg)', text: 'var(--dark-ink)' },
+  cream:    { bg: 'var(--bg)',              text: 'var(--ink)' },
+  sepia:    { bg: 'var(--reader-sepia-bg)', text: 'var(--dark-ink)' },
+  midnight: { bg: 'var(--dark-bg)',         text: 'var(--dark-ink)' },
 }
 
 const THEME_BG: Record<'cream' | 'sepia' | 'midnight', string> = {
   midnight: 'linear-gradient(180deg, var(--dark-bg) 0%, var(--dark-bg2) 100%)',
-  sepia:    'linear-gradient(180deg, #1e1708 0%, #2a2010 100%)',
+  sepia:    'linear-gradient(180deg, var(--reader-sepia-grad-start) 0%, var(--reader-sepia-grad-end) 100%)',
   cream:    'linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%)',
 }
 
@@ -43,13 +45,13 @@ export function Reading({
   onChangeTheme,
   onChangeFontFamily,
   onToggleBookmark,
+  onToast,
 }: ReadingProps) {
   const [page, setPage] = useState(0)
   const [slideDir, setSlideDir] = useState<'left' | 'right' | null>(null)
   const [showTypeSheet, setShowTypeSheet] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
-  const [bookmarkToast, setBookmarkToast] = useState<string | null>(null)
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
@@ -122,15 +124,14 @@ export function Reading({
     }, 220)
   }
 
-  function handleBookmarkToggle(e: React.MouseEvent) {
+  const handleBookmarkToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     onToggleBookmark()
-    const msg = bookmarked ? 'Removed' : 'Saved'
-    setBookmarkToast(msg)
-    setTimeout(() => setBookmarkToast(null), 1500)
-  }
+    onToast(bookmarked ? 'Removed' : 'Saved', BOOKMARK_TOAST_MS)
+  }, [onToggleBookmark, onToast, bookmarked])
 
-  const colors = THEME_COLORS[theme]
+  const colors = useMemo(() => THEME_COLORS[theme], [theme])
+  const containerBg = useMemo(() => THEME_BG[theme], [theme])
   const ff = fontFamily === 'serif' ? "var(--serif)" : "var(--sans)"
 
   function handleTap(e: React.MouseEvent) {
@@ -156,7 +157,7 @@ export function Reading({
         minHeight: '100dvh',
         position: 'relative',
         overflow: 'hidden',
-        background: THEME_BG[theme],
+        background: containerBg,
         animation: 'st-fade-in 0.4s ease both',
       }}
       onClick={handleTap}
@@ -588,7 +589,7 @@ export function Reading({
                       padding: '8px 4px',
                       borderRadius: 10,
                       border: `2px solid ${theme === t ? 'var(--accent)' : 'var(--ink15)'}`,
-                      backgroundColor: t === 'cream' ? 'var(--bg)' : t === 'sepia' ? '#2a2218' : 'var(--dark-bg)',
+                      backgroundColor: t === 'cream' ? 'var(--bg)' : t === 'sepia' ? 'var(--reader-sepia-bg)' : 'var(--dark-bg)',
                       color: t === 'cream' ? 'var(--ink)' : 'var(--dark-ink)',
                       fontFamily: "var(--sans)",
                       fontSize: 12,
@@ -606,7 +607,7 @@ export function Reading({
                         height: 20,
                         borderRadius: '50%',
                         border: '1px solid rgba(0,0,0,0.1)',
-                        backgroundColor: t === 'cream' ? 'var(--bg2)' : t === 'sepia' ? '#3d3020' : 'var(--dark-bg2)',
+                        backgroundColor: t === 'cream' ? 'var(--bg2)' : t === 'sepia' ? 'var(--reader-sepia-bg2)' : 'var(--dark-bg2)',
                       }}
                     />
                     {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -657,29 +658,6 @@ export function Reading({
         </div>
       )}
 
-      {/* Bookmark toast */}
-      {bookmarkToast && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 48,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'var(--ink)',
-            color: 'var(--bg)',
-            fontFamily: "var(--sans)",
-            fontSize: 13,
-            fontWeight: 500,
-            padding: '10px 20px',
-            borderRadius: 20,
-            zIndex: 100,
-            animation: 'st-fade-in 0.2s ease both',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {bookmarkToast}
-        </div>
-      )}
     </div>
   )
 }

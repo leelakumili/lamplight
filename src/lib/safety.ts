@@ -19,10 +19,9 @@ const UNSAFE: RegExp[] = [
   new RegExp('\\b(n[i1]gg[aer]{1,2}r?s?|ch[i1]nk(?:s)?|g[o0][o0]k(?:s)?|sp[i1]c(?:s)?|k[i1]ke(?:s)?|w[e3]tb[a@]ck(?:s)?|c[o0]{2}n(?:s)?|dago(?:s)?|cr[a@]cker(?:s)?)\\b', 'gi'),
 ]
 
-export interface SafetyResult {
-  safe: boolean
-  flagged: string[]
-}
+export type SafetyResult =
+  | { safe: true }
+  | { safe: false; flagged: string[] }
 
 export function checkSafety(text: string): SafetyResult {
   const flagged: string[] = []
@@ -31,7 +30,7 @@ export function checkSafety(text: string): SafetyResult {
     const matches = text.match(re)
     if (matches) flagged.push(...matches.map(m => m.toLowerCase()))
   }
-  return { safe: flagged.length === 0, flagged }
+  return flagged.length === 0 ? { safe: true } : { safe: false, flagged }
 }
 
 // OpenAI Moderation API — used when an OpenAI key is configured.
@@ -50,7 +49,7 @@ export async function checkSafetyViaAPI(text: string, apiKey: string): Promise<S
     const flagged = Object.entries(result.categories).filter(([, v]) => v).map(([k]) => k)
     return { safe: false, flagged }
   }
-  return { safe: true, flagged: [] }
+  return { safe: true }
 }
 
 // Smart check: use OpenAI Moderation API when available, wordlist otherwise.

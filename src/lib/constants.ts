@@ -17,3 +17,9 @@ export const READER_THEMES = ['cream', 'sepia', 'midnight'] as const
 export type ReaderTheme = typeof READER_THEMES[number]
 
 export const OLLAMA_DEFAULT_URL = 'http://localhost:11434'
+
+// Timing constants
+export const ILLUSTRATION_TIMEOUT_MS  = 30_000
+export const GENERATION_LONG_WAIT_MS  = 45_000
+export const GENERATION_TIMEOUT_MS    = 90_000
+export const BOOKMARK_TOAST_MS        = 1_500

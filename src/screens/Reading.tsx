@@ -163,7 +163,56 @@ export function Reading({
         </button>
       </div>
 
-      {/* Floating story card */}
+      {/* Title zone — top half background */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          maxWidth: 430,
+          margin: '0 auto',
+          height: '38%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '72px 32px 16px',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 10,
+            fontWeight: 500,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: theme === 'cream' ? '#76705f' : 'rgba(229,181,116,0.6)',
+            marginBottom: 12,
+          }}
+        >
+          {story.mode === 'parent' ? 'A story for tonight' : 'Your story'}
+        </div>
+        <div
+          style={{
+            fontFamily: "'Newsreader', Georgia, serif",
+            fontSize: 28,
+            fontWeight: 400,
+            lineHeight: 1.2,
+            letterSpacing: '-0.015em',
+            color: theme === 'cream' ? '#1f1b16' : '#e9dfc9',
+            textAlign: 'center',
+            opacity: slideDir ? 0 : 1,
+            transition: 'opacity 0.3s ease',
+          }}
+        >
+          {story.title}
+        </div>
+      </div>
+
+      {/* Story card — bottom 65% */}
       <div
         style={{
           position: 'fixed',
@@ -172,70 +221,45 @@ export function Reading({
           right: 0,
           maxWidth: 430,
           margin: '0 auto',
-          padding: '0 16px 24px',
+          height: '65%',
+          padding: '0 14px 20px',
           zIndex: 10,
         }}
       >
         <div
           onClick={e => e.stopPropagation()}
           style={{
+            height: '100%',
             backgroundColor: colors.bg,
-            borderRadius: 22,
-            padding: '20px 22px',
-            boxShadow: '0 -4px 40px rgba(0,0,0,0.3)',
-            transform: slideDir === 'left' ? 'translateX(-18px)' : slideDir === 'right' ? 'translateX(18px)' : 'translateX(0)',
+            borderRadius: '22px 22px 18px 18px',
+            padding: '18px 20px 16px',
+            boxShadow: '0 -8px 48px rgba(0,0,0,0.35)',
+            display: 'flex',
+            flexDirection: 'column',
+            transform: slideDir === 'left' ? 'translateX(-22px)' : slideDir === 'right' ? 'translateX(22px)' : 'translateX(0)',
             opacity: slideDir ? 0 : 1,
             transition: slideDir ? 'transform 0.22s ease, opacity 0.22s ease' : 'none',
           }}
         >
-          {/* Chapter label italic */}
+          {/* Story text — scrollable fill */}
           <div
             style={{
-              fontFamily: "'Newsreader', Georgia, serif",
-              fontSize: 13,
-              fontStyle: 'italic',
-              color: '#a35d3a',
-              marginBottom: 10,
-            }}
-          >
-            {story.mode === 'parent' ? 'A story for tonight' : 'Your story'}
-          </div>
-
-          {/* Title on first page */}
-          {page === 0 && (
-            <div
-              style={{
-                fontFamily: "'Newsreader', Georgia, serif",
-                fontSize: 22,
-                fontWeight: 500,
-                color: colors.text,
-                lineHeight: 1.25,
-                letterSpacing: '-0.01em',
-                marginBottom: 14,
-              }}
-            >
-              {story.title}
-            </div>
-          )}
-
-          {/* Story text */}
-          <div
-            style={{
+              flex: 1,
+              overflowY: 'auto',
               fontFamily: ff,
               fontSize,
-              lineHeight: 1.6,
+              lineHeight: 1.65,
               color: colors.text,
-              maxHeight: 280,
-              overflowY: 'auto',
-              marginBottom: 16,
+              marginBottom: 12,
             }}
           >
             {currentPageText.split('\n\n').map((para, i) => {
               const isFirst = page === 0 && i === 0
               const firstLetter = isFirst ? para.charAt(0) : ''
               const rest = isFirst ? para.slice(1) : para
+              const paras = currentPageText.split('\n\n')
               return (
-                <p key={i} style={{ marginBottom: i < currentPageText.split('\n\n').length - 1 ? '1em' : 0, overflow: 'hidden' }}>
+                <p key={i} style={{ margin: 0, marginBottom: i < paras.length - 1 ? '0.9em' : 0, overflow: 'hidden' }}>
                   {isFirst && (
                     <span
                       style={{
@@ -243,8 +267,8 @@ export function Reading({
                         fontFamily: "'Newsreader', Georgia, serif",
                         fontSize: fontSize * 3.2,
                         lineHeight: 0.82,
-                        paddingRight: 6,
-                        paddingTop: 4,
+                        paddingRight: 7,
+                        paddingTop: 5,
                         color: theme === 'cream' ? '#a35d3a' : '#e5b574',
                         fontStyle: 'italic',
                         fontWeight: 400,
@@ -265,14 +289,17 @@ export function Reading({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              paddingTop: 12,
+              borderTop: `1px solid ${theme === 'cream' ? '#dfd5bd' : 'rgba(233,223,201,0.1)'}`,
             }}
           >
             <div
               style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 12,
-                color: '#76705f',
-                letterSpacing: '0.04em',
+                fontSize: 11,
+                color: theme === 'cream' ? '#b2aa97' : 'rgba(233,223,201,0.4)',
+                letterSpacing: '0.06em',
+                minWidth: 44,
               }}
             >
               {pageNum}/{totalNum}
@@ -283,14 +310,14 @@ export function Reading({
               {Array.from({ length: Math.min(totalPages, 9) }).map((_, i) => (
                 <div
                   key={i}
-                  onClick={e => { e.stopPropagation(); setPage(i) }}
+                  onClick={e => { e.stopPropagation(); goToPage(i) }}
                   style={{
-                    width: 5,
+                    width: i === page ? 16 : 5,
                     height: 5,
-                    borderRadius: '50%',
-                    backgroundColor: i <= page ? '#c9924a' : '#dfd5bd',
+                    borderRadius: 3,
+                    backgroundColor: i <= page ? '#c9924a' : (theme === 'cream' ? '#dfd5bd' : 'rgba(233,223,201,0.2)'),
                     cursor: 'pointer',
-                    transition: 'background-color 0.15s ease',
+                    transition: 'width 0.25s ease, background-color 0.15s ease',
                   }}
                 />
               ))}
@@ -304,10 +331,12 @@ export function Reading({
                 border: 'none',
                 cursor: 'pointer',
                 padding: 4,
-                color: '#76705f',
+                minWidth: 44,
+                display: 'flex',
+                justifyContent: 'flex-end',
               }}
             >
-              <Icon name="chevron-right" size={18} color="#76705f" />
+              <Icon name="chevron-right" size={18} color={theme === 'cream' ? '#b2aa97' : 'rgba(233,223,201,0.4)'} />
             </button>
           </div>
         </div>

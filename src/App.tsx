@@ -266,8 +266,16 @@ export default function App() {
           <Home
             setup={setup}
             history={history}
-            onParentEntry={() => nav('parent-q1')}
-            onTeenEntry={() => nav('teen-themes')}
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            onParentEntry={() => {
+              dispatch({ type: 'SET_MODE', mode: 'parent' })
+              nav('parent-q1')
+            }}
+            onTeenEntry={() => {
+              dispatch({ type: 'SET_MODE', mode: 'teen' })
+              nav('teen-themes')
+            }}
             onSettings={() => nav('settings')}
             onOpenStory={story => {
               dispatch({ type: 'SET_CURRENT_STORY', story })
@@ -276,6 +284,17 @@ export default function App() {
             onDeleteStory={async id => {
               dispatch({ type: 'DELETE_STORY', id })
               await deleteStory(id)
+            }}
+            onSetActiveProfile={async id => {
+              dispatch({ type: 'SET_ACTIVE_PROFILE', id })
+              await saveActiveProfileId(id)
+            }}
+            onAddProfile={async profile => {
+              const newProfiles = [...profiles, profile]
+              dispatch({ type: 'ADD_PROFILE', profile })
+              dispatch({ type: 'SET_ACTIVE_PROFILE', id: profile.id })
+              await saveProfiles(newProfiles)
+              await saveActiveProfileId(profile.id)
             }}
           />
         ) : null

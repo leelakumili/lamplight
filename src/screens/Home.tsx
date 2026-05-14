@@ -1,16 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
-import { getGreeting, formatStoryAge } from '../lib/utils'
-import type { Setup, Story } from '../types'
+import { getGreeting, formatStoryAge, generateId } from '../lib/utils'
+import type { Setup, Story, Profile } from '../types'
 
 interface HomeProps {
   setup: Setup
   history: Story[]
+  profiles: Profile[]
+  activeProfileId: string | null
   onParentEntry: () => void
   onTeenEntry: () => void
   onSettings: () => void
   onOpenStory: (story: Story) => void
   onDeleteStory: (id: string) => void
+  onSetActiveProfile: (id: string) => void
+  onAddProfile: (profile: Profile) => void
 }
 
 interface StoryRowProps {
@@ -180,9 +184,10 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
   )
 }
 
-export function Home({ setup, history, onParentEntry, onTeenEntry, onSettings, onOpenStory, onDeleteStory }: HomeProps) {
+export function Home({ setup, history, profiles, activeProfileId, onParentEntry, onTeenEntry, onSettings, onOpenStory, onDeleteStory, onSetActiveProfile, onAddProfile }: HomeProps) {
   const [greeting, setGreeting] = useState(getGreeting())
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showProfilePicker, setShowProfilePicker] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => setGreeting(getGreeting()), 30000)
@@ -225,10 +230,73 @@ export function Home({ setup, history, onParentEntry, onTeenEntry, onSettings, o
           <Icon name="moon" size={18} color="white" strokeWidth={1.5} />
         </div>
 
-        {/* Settings */}
-        <button onClick={onSettings} style={{ padding: 4, color: '#3e3830' }}>
-          <Icon name="settings" size={22} color="#3e3830" strokeWidth={1.5} />
-        </button>
+        {/* Profile switcher + Settings */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {profiles.length > 1 && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowProfilePicker(v => !v)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '6px 10px',
+                  borderRadius: 20,
+                  border: '1px solid #dfd5bd',
+                  backgroundColor: '#f3ead8',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13,
+                  color: '#3e3830',
+                  cursor: 'pointer',
+                }}
+              >
+                {profiles.find(p => p.id === activeProfileId)?.name ?? 'Profile'}
+                <Icon name="chevron-down" size={12} color="#76705f" />
+              </button>
+              {showProfilePicker && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '110%',
+                    right: 0,
+                    backgroundColor: '#f3ead8',
+                    borderRadius: 14,
+                    border: '1px solid #dfd5bd',
+                    overflow: 'hidden',
+                    zIndex: 50,
+                    minWidth: 140,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  {profiles.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => { onSetActiveProfile(p.id); setShowProfilePicker(false) }}
+                      style={{
+                        width: '100%',
+                        padding: '11px 14px',
+                        textAlign: 'left',
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: '1px solid #dfd5bd',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: 13,
+                        color: p.id === activeProfileId ? '#c9924a' : '#3e3830',
+                        fontWeight: p.id === activeProfileId ? 600 : 400,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <button onClick={onSettings} style={{ padding: 4, color: '#3e3830' }}>
+            <Icon name="settings" size={22} color="#3e3830" strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
 
       {/* Greeting */}

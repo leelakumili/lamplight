@@ -219,10 +219,10 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
             <Icon name="moon" size={180} color="#e5b574" strokeWidth={0.8} />
           </div>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e5b574', marginBottom: 10 }}>For the Parent</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e5b574', marginBottom: 10 }}>By Situation</div>
             <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 26, fontWeight: 400, color: '#e9dfc9', lineHeight: 1.2, marginBottom: 6 }}>Tonight's story</div>
             <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'rgba(233,223,201,0.66)', lineHeight: 1.5, marginBottom: 18 }}>
-              Four quiet questions about {displayName}'s day. Then a story by bedtime.
+              Tell me about {displayName}'s day — I'll shape it into a story by bedtime.
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: '#faf4e8' }}>
               Start
@@ -239,9 +239,9 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
             <Icon name="sparkle" size={140} color="#a35d3a" strokeWidth={0.8} />
           </div>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#a35d3a', marginBottom: 8 }}>For {displayName}</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#a35d3a', marginBottom: 8 }}>By Theme</div>
             <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 24, fontWeight: 400, color: '#1f1b16', lineHeight: 1.2, marginBottom: 4 }}>Make my story</div>
-            <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#76705f', lineHeight: 1.5 }}>Pick a theme and I'll write you something tonight.</div>
+            <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#76705f', lineHeight: 1.5 }}>Pick a feeling and I'll write something just for tonight.</div>
           </div>
         </button>
 

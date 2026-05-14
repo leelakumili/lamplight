@@ -94,13 +94,13 @@ async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: stri
   return data.choices[0].message.content
 }
 
-async function callOllama(ollamaUrl: string, systemPrompt: string, userPrompt: string): Promise<string> {
+async function callOllama(ollamaUrl: string, model: string, systemPrompt: string, userPrompt: string): Promise<string> {
   const url = ollamaUrl.replace(/\/$/, '') + '/api/generate'
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama3.1',
+      model: model || 'mistral',
       prompt: systemPrompt + '\n\n' + userPrompt,
       stream: false,
     }),
@@ -128,7 +128,7 @@ export async function generateStory(params: {
   let rawText: string
 
   if (setup.useLocal) {
-    rawText = await callOllama(setup.ollamaUrl || 'http://localhost:11434', SYSTEM_PROMPT, userPrompt)
+    rawText = await callOllama(setup.ollamaUrl || 'http://localhost:11434', setup.ollamaModel || 'mistral', SYSTEM_PROMPT, userPrompt)
   } else if (setup.provider === 'claude') {
     rawText = await callClaude(setup.apiKey, SYSTEM_PROMPT, userPrompt)
   } else {

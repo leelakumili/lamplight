@@ -15,6 +15,7 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
   const [apiKey, setApiKey] = useState('')
   const [showKey, setShowKey] = useState(false)
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
+  const [ollamaModel, setOllamaModel] = useState('mistral')
   const [apiKeyError, setApiKeyError] = useState('')
 
   function handleFinish() {
@@ -27,6 +28,7 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
       apiKey: apiKey.trim(),
       useLocal: mode === 'local',
       ollamaUrl: ollamaUrl.trim() || 'http://localhost:11434',
+      ollamaModel: ollamaModel.trim() || 'mistral',
     })
   }
 
@@ -238,6 +240,41 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                 color: '#1f1b16',
               }}
             />
+            <div style={{ marginTop: 18 }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: '#76705f',
+                  marginBottom: 8,
+                }}
+              >
+                Model name
+              </label>
+              <input
+                type="text"
+                value={ollamaModel}
+                onChange={e => setOllamaModel(e.target.value)}
+                placeholder="mistral"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #dfd5bd',
+                  backgroundColor: '#f3ead8',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 15,
+                  color: '#1f1b16',
+                }}
+              />
+              <div style={{ marginTop: 6, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#76705f' }}>
+                Must match exactly what `ollama list` shows — e.g. mistral:latest, llama3.1, qwen2.5-coder:7b
+              </div>
+            </div>
           </div>
         )}
 

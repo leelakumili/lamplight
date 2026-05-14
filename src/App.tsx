@@ -115,6 +115,7 @@ export default function App() {
       apiKey: '',
       useLocal: false,
       ollamaUrl: 'http://localhost:11434',
+      ollamaModel: 'mistral',
       defaultFontSize: 16,
       defaultTheme: 'midnight',
       defaultFontFamily: 'serif',

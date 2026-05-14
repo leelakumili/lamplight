@@ -362,12 +362,51 @@ export function Settings({ setup: initialSetup, onBack, onSave }: SettingsProps)
               </button>
             </div>
           </Row>
-          <Row label="Use local model" last>
+          <Row label="Use local model">
             <Toggle
               checked={setup.useLocal}
               onChange={v => update('useLocal', v)}
             />
           </Row>
+          {setup.useLocal && (
+            <>
+              <Row label="Ollama URL">
+                <input
+                  type="text"
+                  value={setup.ollamaUrl}
+                  onChange={e => update('ollamaUrl', e.target.value)}
+                  placeholder="http://localhost:11434"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 13,
+                    color: '#76705f',
+                    textAlign: 'right',
+                    maxWidth: 180,
+                  }}
+                />
+              </Row>
+              <Row label="Model name" last>
+                <input
+                  type="text"
+                  value={setup.ollamaModel || ''}
+                  onChange={e => update('ollamaModel', e.target.value)}
+                  placeholder="mistral"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 13,
+                    color: '#76705f',
+                    textAlign: 'right',
+                    maxWidth: 180,
+                  }}
+                />
+              </Row>
+            </>
+          )}
+          {!setup.useLocal && <div style={{ height: 1 }} />}
         </Card>
 
         {/* Reading */}

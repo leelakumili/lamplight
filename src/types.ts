@@ -22,6 +22,7 @@ export interface Setup {
   apiKey: string
   useLocal: boolean
   ollamaUrl: string
+  ollamaModel: string
   defaultFontSize: number
   defaultTheme: 'cream' | 'sepia' | 'midnight'
   defaultFontFamily: 'serif' | 'sans'

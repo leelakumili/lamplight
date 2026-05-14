@@ -3,13 +3,13 @@ import { Icon } from '../components/Icon'
 
 const THEMES = [
   { title: 'Left out', sub: 'When no one saved you a seat.', icon: 'arc', color: '#6e8579' },
-  { title: 'Someone was mean', sub: "A line that didn't leave your head.", icon: 'crack', color: '#a35d3a' },
-  { title: 'Friend drama', sub: 'Things shifted and you can feel it.', icon: 'knot', color: '#c9924a' },
+  { title: 'Someone was mean', sub: "A line that didn't leave your head.", icon: 'crack', color: 'var(--accent2)' },
+  { title: 'Friend drama', sub: 'Things shifted and you can feel it.', icon: 'knot', color: 'var(--accent)' },
   { title: 'Misunderstood', sub: 'You meant one thing. They heard another.', icon: 'echo', color: '#4a4d6b' },
   { title: 'Too much noise', sub: 'Your head needs the volume down.', icon: 'wave', color: '#6e8579' },
-  { title: 'A small win', sub: 'Something good. Worth a real story.', icon: 'spark', color: '#c9924a' },
+  { title: 'A small win', sub: 'Something good. Worth a real story.', icon: 'spark', color: 'var(--accent)' },
   { title: 'Tomorrow looms', sub: "A thing on the calendar you're bracing for.", icon: 'horizon', color: '#4a4d6b' },
-  { title: 'Just somewhere else', sub: 'No prompt. Take me out of today.', icon: 'door', color: '#a35d3a' },
+  { title: 'Just somewhere else', sub: 'No prompt. Take me out of today.', icon: 'door', color: 'var(--accent2)' },
 ]
 
 interface TeenThemesProps {
@@ -23,7 +23,7 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         animation: 'st-fade-in 0.3s ease both',
@@ -32,7 +32,7 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
       {/* Header */}
       <div style={{ padding: '16px 20px 0' }}>
         <button onClick={onBack} style={{ padding: 4 }}>
-          <Icon name="chevron-left" size={24} color="#3e3830" />
+          <Icon name="chevron-left" size={24} color="var(--ink70)" />
         </button>
       </div>
 
@@ -40,12 +40,12 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
       <div style={{ flex: 1, padding: '16px 20px 40px', overflowY: 'auto' }}>
         <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#76705f',
+            color: 'var(--ink50)',
             marginBottom: 10,
           }}
         >
@@ -54,23 +54,23 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
 
         <h1
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 28,
             fontWeight: 400,
             lineHeight: 1.2,
-            color: '#1f1b16',
+            color: 'var(--ink)',
             marginBottom: 8,
           }}
         >
           What's the{' '}
-          <em style={{ color: '#a35d3a', fontStyle: 'italic' }}>story about?</em>
+          <em style={{ color: 'var(--accent2)', fontStyle: 'italic' }}>story about?</em>
         </h1>
 
         <p
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 14,
-            color: '#76705f',
+            color: 'var(--ink50)',
             lineHeight: 1.5,
             marginBottom: 24,
           }}
@@ -93,8 +93,8 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
               style={{
                 minHeight: 148,
                 borderRadius: 16,
-                border: '1px solid #dfd5bd',
-                backgroundColor: '#f3ead8',
+                border: '1px solid var(--ink15)',
+                backgroundColor: 'var(--bg2)',
                 padding: '16px 14px 14px',
                 textAlign: 'left',
                 cursor: 'pointer',
@@ -106,10 +106,10 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
               <Icon name={theme.icon} size={26} color={theme.color} strokeWidth={1.6} />
               <div
                 style={{
-                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontFamily: "var(--serif)",
                   fontSize: 17,
                   fontWeight: 400,
-                  color: '#1f1b16',
+                  color: 'var(--ink)',
                   lineHeight: 1.2,
                   marginTop: 10,
                 }}
@@ -118,9 +118,9 @@ export function TeenThemes({ name, onBack, onSelect }: TeenThemesProps) {
               </div>
               <div
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--sans)",
                   fontSize: 11.5,
-                  color: '#76705f',
+                  color: 'var(--ink50)',
                   lineHeight: 1.4,
                   marginTop: 4,
                   flex: 1,

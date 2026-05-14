@@ -25,7 +25,7 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         animation: 'st-fade-in 0.3s ease both',
@@ -41,15 +41,15 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
         }}
       >
         <button onClick={onBack} style={{ padding: 4 }}>
-          <Icon name="chevron-left" size={24} color="#3e3830" />
+          <Icon name="chevron-left" size={24} color="var(--ink70)" />
         </button>
         <ParentProgress step={2} />
         <button
           onClick={onSkip}
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 14,
-            color: '#76705f',
+            color: 'var(--ink50)',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
@@ -63,12 +63,12 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
       <div style={{ flex: 1, padding: '16px 24px 40px', display: 'flex', flexDirection: 'column' }}>
         <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#c9924a',
+            color: 'var(--accent)',
             marginBottom: 16,
           }}
         >
@@ -77,11 +77,11 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
 
         <h2
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 26,
             fontWeight: 400,
             lineHeight: 1.22,
-            color: '#1f1b16',
+            color: 'var(--ink)',
             marginBottom: 24,
           }}
         >
@@ -93,12 +93,12 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
           <div style={{ marginBottom: 20 }}>
             <div
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--sans)",
                 fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
-                color: '#76705f',
+                color: 'var(--ink50)',
                 marginBottom: 10,
               }}
             >
@@ -114,10 +114,10 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
                     style={{
                       padding: '7px 14px',
                       borderRadius: 20,
-                      border: `1px solid ${active ? '#1f1b16' : '#dfd5bd'}`,
-                      backgroundColor: active ? '#1f1b16' : 'transparent',
-                      color: active ? '#faf4e8' : '#3e3830',
-                      fontFamily: "'DM Sans', sans-serif",
+                      border: `1px solid ${active ? 'var(--ink)' : 'var(--ink15)'}`,
+                      backgroundColor: active ? 'var(--ink)' : 'transparent',
+                      color: active ? 'var(--bg)' : 'var(--ink70)',
+                      fontFamily: "var(--sans)",
                       fontSize: 13,
                       fontWeight: 500,
                       cursor: 'pointer',
@@ -141,12 +141,12 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
             width: '100%',
             padding: '16px',
             borderRadius: 16,
-            border: '1px solid #dfd5bd',
-            backgroundColor: '#f3ead8',
-            fontFamily: "'Newsreader', Georgia, serif",
+            border: '1px solid var(--ink15)',
+            backgroundColor: 'var(--bg2)',
+            fontFamily: "var(--serif)",
             fontSize: 16,
             lineHeight: 1.5,
-            color: '#1f1b16',
+            color: 'var(--ink)',
             minHeight: 140,
             flex: 1,
             marginBottom: 28,
@@ -159,9 +159,9 @@ export function ParentQ2({ friends, whoWasThere: initWho, whoNote: initNote, onB
             width: '100%',
             height: 54,
             borderRadius: 14,
-            background: 'linear-gradient(135deg, #c9924a, #a35d3a)',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--cta)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 16,
             fontWeight: 500,
             border: 'none',

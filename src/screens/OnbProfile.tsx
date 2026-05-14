@@ -53,7 +53,7 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         animation: 'st-fade-in 0.3s ease both',
@@ -68,8 +68,8 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
           padding: '16px 20px',
         }}
       >
-        <button onClick={onBack} style={{ padding: 4, color: '#3e3830' }}>
-          <Icon name="chevron-left" size={24} color="#3e3830" />
+        <button onClick={onBack} style={{ padding: 4, color: 'var(--ink70)' }}>
+          <Icon name="chevron-left" size={24} color="var(--ink70)" />
         </button>
         <ProgressDots total={3} filled={2} />
         <div style={{ width: 32 }} />
@@ -80,12 +80,12 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
         {/* Kicker + Headline */}
         <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#76705f',
+            color: 'var(--ink50)',
             marginBottom: 10,
           }}
         >
@@ -93,11 +93,11 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
         </div>
         <h1
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 30,
             fontWeight: 400,
             lineHeight: 1.15,
-            color: '#1f1b16',
+            color: 'var(--ink)',
             marginBottom: 32,
           }}
         >
@@ -109,12 +109,12 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
           <label
             style={{
               display: 'block',
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "var(--sans)",
               fontSize: 12,
               fontWeight: 500,
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
-              color: '#76705f',
+              color: 'var(--ink50)',
               marginBottom: 8,
             }}
           >
@@ -130,15 +130,15 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
               width: '100%',
               padding: '12px 14px',
               borderRadius: 12,
-              border: `1px solid ${nameError ? '#a35d3a' : '#dfd5bd'}`,
-              backgroundColor: '#f3ead8',
-              fontFamily: "'DM Sans', sans-serif",
+              border: `1px solid ${nameError ? 'var(--accent2)' : 'var(--ink15)'}`,
+              backgroundColor: 'var(--bg2)',
+              fontFamily: "var(--sans)",
               fontSize: 15,
-              color: '#1f1b16',
+              color: 'var(--ink)',
             }}
           />
           {nameError && (
-            <div style={{ marginTop: 4, fontSize: 12, color: '#a35d3a', fontFamily: "'DM Sans', sans-serif" }}>
+            <div style={{ marginTop: 4, fontSize: 12, color: 'var(--accent2)', fontFamily: "var(--sans)" }}>
               {nameError}
             </div>
           )}
@@ -149,12 +149,12 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
           <label
             style={{
               display: 'block',
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "var(--sans)",
               fontSize: 12,
               fontWeight: 500,
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
-              color: '#76705f',
+              color: 'var(--ink50)',
               marginBottom: 10,
             }}
           >
@@ -170,9 +170,9 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
                   gap: 4,
                   padding: '6px 10px 6px 12px',
                   borderRadius: 20,
-                  backgroundColor: '#1f1b16',
-                  color: '#faf4e8',
-                  fontFamily: "'DM Sans', sans-serif",
+                  backgroundColor: 'var(--ink)',
+                  color: 'var(--bg)',
+                  fontFamily: "var(--sans)",
                   fontSize: 13,
                   fontWeight: 500,
                 }}
@@ -186,12 +186,12 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
                     cursor: 'pointer',
                     padding: 0,
                     marginLeft: 2,
-                    color: '#b2aa97',
+                    color: 'var(--ink30)',
                     display: 'flex',
                     alignItems: 'center',
                   }}
                 >
-                  <Icon name="x" size={12} color="#b2aa97" strokeWidth={2} />
+                  <Icon name="x" size={12} color="var(--ink30)" strokeWidth={2} />
                 </button>
               </div>
             ))}
@@ -208,11 +208,11 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
                 style={{
                   padding: '6px 12px',
                   borderRadius: 20,
-                  border: '1px solid #c9924a',
-                  backgroundColor: '#f3ead8',
-                  fontFamily: "'DM Sans', sans-serif",
+                  border: '1px solid var(--accent)',
+                  backgroundColor: 'var(--bg2)',
+                  fontFamily: "var(--sans)",
                   fontSize: 13,
-                  color: '#1f1b16',
+                  color: 'var(--ink)',
                   width: 120,
                 }}
               />
@@ -225,21 +225,21 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
                   gap: 4,
                   padding: '6px 12px',
                   borderRadius: 20,
-                  border: '1.5px dashed #b2aa97',
+                  border: '1.5px dashed var(--ink30)',
                   backgroundColor: 'transparent',
-                  color: '#76705f',
-                  fontFamily: "'DM Sans', sans-serif",
+                  color: 'var(--ink50)',
+                  fontFamily: "var(--sans)",
                   fontSize: 13,
                   cursor: 'pointer',
                 }}
               >
-                <Icon name="plus" size={12} color="#76705f" strokeWidth={2} />
+                <Icon name="plus" size={12} color="var(--ink50)" strokeWidth={2} />
                 Add a friend's name
               </button>
             ) : null}
           </div>
           {friendError && (
-            <div style={{ marginTop: 8, fontSize: 12, color: '#76705f', fontFamily: "'DM Sans', sans-serif", fontStyle: 'italic' }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink50)', fontFamily: "var(--sans)", fontStyle: 'italic' }}>
               {friendError}
             </div>
           )}
@@ -250,12 +250,12 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
           <label
             style={{
               display: 'block',
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "var(--sans)",
               fontSize: 12,
               fontWeight: 500,
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
-              color: '#76705f',
+              color: 'var(--ink50)',
               marginBottom: 8,
             }}
           >
@@ -269,12 +269,12 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
               width: '100%',
               padding: '14px 16px',
               borderRadius: 12,
-              border: '1px solid #dfd5bd',
-              backgroundColor: '#f3ead8',
-              fontFamily: "'Newsreader', Georgia, serif",
+              border: '1px solid var(--ink15)',
+              backgroundColor: 'var(--bg2)',
+              fontFamily: "var(--serif)",
               fontSize: 15,
               lineHeight: 1.5,
-              color: '#1f1b16',
+              color: 'var(--ink)',
               minHeight: 96,
             }}
           />
@@ -287,9 +287,9 @@ export function OnbProfile({ onBack, onContinue, initial }: OnbProfileProps) {
             width: '100%',
             height: 54,
             borderRadius: 14,
-            background: 'linear-gradient(135deg, #c9924a, #a35d3a)',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--cta)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 16,
             fontWeight: 500,
             border: 'none',

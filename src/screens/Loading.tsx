@@ -50,7 +50,7 @@ export function Loading({ onTimeout }: LoadingProps) {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#15182a',
+        backgroundColor: 'var(--dark-bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -66,7 +66,7 @@ export function Loading({ onTimeout }: LoadingProps) {
             position: 'absolute',
             inset: 0,
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 35% 35%, #e5b574, #a35d3a 70%, transparent 75%)',
+            background: 'radial-gradient(circle at 35% 35%, var(--accent-s), var(--accent2) 70%, transparent 75%)',
             filter: 'blur(2px)',
             opacity: 0.85,
             animation: 'st-breath 4.5s ease-in-out infinite',
@@ -77,8 +77,8 @@ export function Loading({ onTimeout }: LoadingProps) {
             position: 'absolute',
             inset: 24,
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 40% 40%, #e5b574, #c9924a)',
-            boxShadow: '0 0 40px #c9924a88',
+            background: 'radial-gradient(circle at 40% 40%, var(--accent-s), var(--accent))',
+            boxShadow: '0 0 40px color-mix(in srgb, var(--accent) 53%, transparent)',
           }}
         />
       </div>
@@ -86,12 +86,12 @@ export function Loading({ onTimeout }: LoadingProps) {
       {/* Kicker */}
       <div
         style={{
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--sans)",
           fontSize: 10,
           fontWeight: 500,
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
-          color: '#e5b574',
+          color: 'var(--accent-s)',
           marginBottom: 18,
         }}
       >
@@ -101,11 +101,11 @@ export function Loading({ onTimeout }: LoadingProps) {
       {/* Cycling phrase */}
       <div
         style={{
-          fontFamily: "'Newsreader', Georgia, serif",
+          fontFamily: "var(--serif)",
           fontSize: 22,
           fontWeight: 400,
           lineHeight: 1.3,
-          color: '#e9dfc9',
+          color: 'var(--dark-ink)',
           textAlign: 'center',
           maxWidth: 300,
           minHeight: 72,
@@ -114,11 +114,11 @@ export function Loading({ onTimeout }: LoadingProps) {
         }}
       >
         {longWait ? (
-          <em style={{ color: '#e5b574' }}>Still going. The good ones take a minute.</em>
+          <em style={{ color: 'var(--accent-s)' }}>Still going. The good ones take a minute.</em>
         ) : (
           <>
             {phrase.main}{' '}
-            <em style={{ color: '#e5b574', fontStyle: 'italic' }}>{phrase.em}</em>
+            <em style={{ color: 'var(--accent-s)', fontStyle: 'italic' }}>{phrase.em}</em>
           </>
         )}
       </div>
@@ -133,7 +133,7 @@ export function Loading({ onTimeout }: LoadingProps) {
                 width: i === phraseIndex ? 18 : 5,
                 height: 5,
                 borderRadius: 3,
-                backgroundColor: i === phraseIndex ? '#c9924a' : 'rgba(233,223,201,0.2)',
+                backgroundColor: i === phraseIndex ? 'var(--accent)' : 'rgba(233,223,201,0.2)',
                 transition: 'width 0.4s ease, background-color 0.4s ease',
               }}
             />
@@ -144,7 +144,7 @@ export function Loading({ onTimeout }: LoadingProps) {
       {/* Sub */}
       <p
         style={{
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--sans)",
           fontSize: 13,
           color: 'rgba(233,223,201,0.5)',
           textAlign: 'center',

@@ -17,7 +17,7 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -33,8 +33,8 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
           width: 56,
           height: 56,
           borderRadius: 18,
-          background: 'linear-gradient(135deg, #c9924a, #a35d3a)',
-          boxShadow: '0 12px 30px #c9924a44',
+          background: 'var(--cta)',
+          boxShadow: '0 12px 30px color-mix(in srgb, var(--accent) 27%, transparent)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -47,12 +47,12 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
       {/* Kicker */}
       <div
         style={{
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--sans)",
           fontSize: 12,
           fontWeight: 500,
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
-          color: '#76705f',
+          color: 'var(--ink50)',
           marginBottom: 18,
         }}
       >
@@ -62,27 +62,27 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
       {/* Headline */}
       <h1
         style={{
-          fontFamily: "'Newsreader', Georgia, serif",
+          fontFamily: "var(--serif)",
           fontSize: 38,
           fontWeight: 400,
           lineHeight: 1.08,
           letterSpacing: '-0.02em',
-          color: '#1f1b16',
+          color: 'var(--ink)',
           textAlign: 'center',
           marginBottom: 20,
         }}
       >
         A new story,{' '}
-        <em style={{ color: '#a35d3a', fontStyle: 'italic' }}>just for tonight.</em>
+        <em style={{ color: 'var(--accent2)', fontStyle: 'italic' }}>just for tonight.</em>
       </h1>
 
       {/* Body */}
       <p
         style={{
-          fontFamily: "'Newsreader', Georgia, serif",
+          fontFamily: "var(--serif)",
           fontSize: 17,
           lineHeight: 1.55,
-          color: '#3e3830',
+          color: 'var(--ink70)',
           textAlign: 'center',
           marginBottom: 44,
           maxWidth: 320,
@@ -99,15 +99,15 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
             width: '100%',
             height: 54,
             borderRadius: 14,
-            background: 'linear-gradient(135deg, #c9924a, #a35d3a)',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--cta)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 16,
             fontWeight: 500,
             border: 'none',
             cursor: 'pointer',
             letterSpacing: '0.01em',
-            boxShadow: '0 4px 16px #c9924a33',
+            boxShadow: '0 4px 16px color-mix(in srgb, var(--accent) 20%, transparent)',
           }}
         >
           Begin setup
@@ -120,11 +120,11 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
             height: 48,
             borderRadius: 14,
             background: 'transparent',
-            color: '#76705f',
-            fontFamily: "'DM Sans', sans-serif",
+            color: 'var(--ink50)',
+            fontFamily: "var(--sans)",
             fontSize: 14,
             fontWeight: 500,
-            border: '1px solid #dfd5bd',
+            border: '1px solid var(--ink15)',
             cursor: 'pointer',
           }}
         >
@@ -140,9 +140,9 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
             bottom: 32,
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: '#1f1b16',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            backgroundColor: 'var(--ink)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 13,
             fontWeight: 500,
             padding: '10px 20px',

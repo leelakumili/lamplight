@@ -20,15 +20,15 @@ interface ReadingProps {
 const FONT_SIZES = [16, 18, 20, 22, 24]
 
 const THEME_COLORS = {
-  cream: { bg: '#ffffff', text: '#1f1b16', scene1: '#c8d8e8', scene2: '#e8e0d0', scene3: '#d0c8b0' },
-  sepia: { bg: '#2a2218', text: '#e9dfc9', scene1: '#1a1510', scene2: '#2a2010', scene3: '#1e1a0e' },
-  midnight: { bg: '#15182a', text: '#e9dfc9', scene1: '#0f1020', scene2: '#15182a', scene3: '#1c2138' },
+  cream:    { bg: 'var(--bg)',     text: 'var(--ink)' },
+  sepia:    { bg: '#2a2218',       text: 'var(--dark-ink)' },
+  midnight: { bg: 'var(--dark-bg)', text: 'var(--dark-ink)' },
 }
 
 const THEME_BG: Record<'cream' | 'sepia' | 'midnight', string> = {
-  midnight: 'linear-gradient(180deg, #15182a 0%, #1c2138 100%)',
+  midnight: 'linear-gradient(180deg, var(--dark-bg) 0%, var(--dark-bg2) 100%)',
   sepia:    'linear-gradient(180deg, #1e1708 0%, #2a2010 100%)',
-  cream:    'linear-gradient(180deg, #faf4e8 0%, #f3ead8 100%)',
+  cream:    'linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%)',
 }
 
 export function Reading({
@@ -131,7 +131,7 @@ export function Reading({
   }
 
   const colors = THEME_COLORS[theme]
-  const ff = fontFamily === 'serif' ? "'Newsreader', Georgia, serif" : "'DM Sans', sans-serif"
+  const ff = fontFamily === 'serif' ? "var(--serif)" : "var(--sans)"
 
   function handleTap(e: React.MouseEvent) {
     const x = e.clientX
@@ -190,14 +190,14 @@ export function Reading({
             backgroundColor: 'rgba(15,16,26,0.7)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(233,223,201,0.12)',
-            color: '#e9dfc9',
-            fontFamily: "'DM Sans', sans-serif",
+            color: 'var(--dark-ink)',
+            fontFamily: "var(--sans)",
             fontSize: 13,
             fontWeight: 500,
             cursor: 'pointer',
           }}
         >
-          <Icon name="chevron-left" size={16} color="#e9dfc9" />
+          <Icon name="chevron-left" size={16} color="var(--dark-ink)" />
           Back
         </button>
 
@@ -217,10 +217,10 @@ export function Reading({
         >
           <div
             style={{
-              fontFamily: "'Newsreader', Georgia, serif",
+              fontFamily: "var(--serif)",
               fontSize: 12,
               fontStyle: 'italic',
-              color: '#c9924a',
+              color: 'var(--accent)',
               lineHeight: 1.2,
             }}
           >
@@ -228,7 +228,7 @@ export function Reading({
           </div>
           <div
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "var(--mono)",
               fontSize: 10,
               color: 'rgba(233,223,201,0.45)',
               letterSpacing: '0.06em',
@@ -254,11 +254,11 @@ export function Reading({
               backgroundColor: (isSpeaking || isPaused) ? 'rgba(201,146,74,0.3)' : 'rgba(15,16,26,0.7)',
               backdropFilter: 'blur(10px)',
               border: (isSpeaking || isPaused) ? '1px solid rgba(201,146,74,0.5)' : '1px solid rgba(233,223,201,0.12)',
-              color: '#e9dfc9',
+              color: 'var(--dark-ink)',
               cursor: 'pointer',
             }}
           >
-            <Icon name={isSpeaking && !isPaused ? 'pause' : 'speaker'} size={16} color="#e9dfc9" />
+            <Icon name={isSpeaking && !isPaused ? 'pause' : 'speaker'} size={16} color="var(--dark-ink)" />
           </button>
 
           {/* Type-sheet icon */}
@@ -274,11 +274,11 @@ export function Reading({
               backgroundColor: 'rgba(15,16,26,0.7)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(233,223,201,0.12)',
-              color: '#e9dfc9',
+              color: 'var(--dark-ink)',
               cursor: 'pointer',
             }}
           >
-            <Icon name="type" size={16} color="#e9dfc9" />
+            <Icon name="type" size={16} color="var(--dark-ink)" />
           </button>
         </div>
       </div>
@@ -337,14 +337,14 @@ export function Reading({
         >
           <div
             style={{
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "var(--sans)",
               fontSize: 10,
               fontWeight: 500,
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: story.illustration
                 ? 'rgba(255,255,255,0.7)'
-                : theme === 'cream' ? '#76705f' : 'rgba(229,181,116,0.6)',
+                : theme === 'cream' ? 'var(--ink50)' : 'rgba(229,181,116,0.6)',
               marginBottom: 12,
             }}
           >
@@ -352,12 +352,12 @@ export function Reading({
           </div>
           <div
             style={{
-              fontFamily: "'Newsreader', Georgia, serif",
+              fontFamily: "var(--serif)",
               fontSize: 28,
               fontWeight: 400,
               lineHeight: 1.2,
               letterSpacing: '-0.015em',
-              color: story.illustration ? '#ffffff' : theme === 'cream' ? '#1f1b16' : '#e9dfc9',
+              color: story.illustration ? '#ffffff' : theme === 'cream' ? 'var(--ink)' : 'var(--dark-ink)',
               textAlign: 'center',
               textShadow: story.illustration ? '0 2px 12px rgba(0,0,0,0.5)' : 'none',
               opacity: slideDir ? 0 : 1,
@@ -421,12 +421,12 @@ export function Reading({
                     <span
                       style={{
                         float: 'left',
-                        fontFamily: "'Newsreader', Georgia, serif",
+                        fontFamily: "var(--serif)",
                         fontSize: fontSize * 3.2,
                         lineHeight: 0.82,
                         paddingRight: 7,
                         paddingTop: 5,
-                        color: theme === 'cream' ? '#a35d3a' : '#e5b574',
+                        color: theme === 'cream' ? 'var(--accent2)' : 'var(--accent-s)',
                         fontStyle: 'italic',
                         fontWeight: 400,
                       }}
@@ -447,7 +447,7 @@ export function Reading({
               alignItems: 'center',
               justifyContent: 'space-between',
               paddingTop: 12,
-              borderTop: `1px solid ${theme === 'cream' ? '#dfd5bd' : 'rgba(233,223,201,0.1)'}`,
+              borderTop: `1px solid ${theme === 'cream' ? 'var(--ink15)' : 'rgba(233,223,201,0.1)'}`,
             }}
           >
             {/* Bookmark button (left side) */}
@@ -466,9 +466,9 @@ export function Reading({
               <Icon
                 name="bookmark"
                 size={18}
-                color={bookmarked ? '#c9924a' : (theme === 'cream' ? '#b2aa97' : 'rgba(233,223,201,0.4)')}
+                color={bookmarked ? 'var(--accent)' : (theme === 'cream' ? 'var(--ink30)' : 'rgba(233,223,201,0.4)')}
                 strokeWidth={bookmarked ? 0 : 1.6}
-                style={bookmarked ? { fill: '#c9924a' } : undefined}
+                style={bookmarked ? { fill: 'var(--accent)' } : undefined}
               />
             </button>
 
@@ -482,7 +482,7 @@ export function Reading({
                     width: i === page ? 16 : 5,
                     height: 5,
                     borderRadius: 3,
-                    backgroundColor: i <= page ? '#c9924a' : (theme === 'cream' ? '#dfd5bd' : 'rgba(233,223,201,0.2)'),
+                    backgroundColor: i <= page ? 'var(--accent)' : (theme === 'cream' ? 'var(--ink15)' : 'rgba(233,223,201,0.2)'),
                     cursor: 'pointer',
                     transition: 'width 0.25s ease, background-color 0.15s ease',
                   }}
@@ -503,7 +503,7 @@ export function Reading({
                 justifyContent: 'flex-end',
               }}
             >
-              <Icon name="chevron-right" size={18} color={theme === 'cream' ? '#b2aa97' : 'rgba(233,223,201,0.4)'} />
+              <Icon name="chevron-right" size={18} color={theme === 'cream' ? 'var(--ink30)' : 'rgba(233,223,201,0.4)'} />
             </button>
           </div>
         </div>
@@ -526,7 +526,7 @@ export function Reading({
               width: '100%',
               maxWidth: 720,
               margin: '0 auto',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'var(--bg)',
               borderRadius: '22px 22px 0 0',
               padding: '20px 24px 40px',
               boxShadow: '0 -8px 40px rgba(0,0,0,0.2)',
@@ -536,12 +536,12 @@ export function Reading({
           >
             <div
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--sans)",
                 fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: '#76705f',
+                color: 'var(--ink50)',
                 marginBottom: 16,
               }}
             >
@@ -550,7 +550,7 @@ export function Reading({
 
             {/* Font size dots */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#3e3830', marginBottom: 10 }}>Font size</div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink70)', marginBottom: 10 }}>Font size</div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 {FONT_SIZES.map(s => (
                   <button
@@ -560,10 +560,10 @@ export function Reading({
                       width: 36,
                       height: 36,
                       borderRadius: '50%',
-                      border: `2px solid ${fontSize === s ? '#c9924a' : '#dfd5bd'}`,
-                      backgroundColor: fontSize === s ? '#c9924a' : 'transparent',
-                      color: fontSize === s ? '#fff' : '#76705f',
-                      fontFamily: "'DM Sans', sans-serif",
+                      border: `2px solid ${fontSize === s ? 'var(--accent)' : 'var(--ink15)'}`,
+                      backgroundColor: fontSize === s ? 'var(--accent)' : 'transparent',
+                      color: fontSize === s ? 'var(--bg)' : 'var(--ink50)',
+                      fontFamily: "var(--sans)",
                       fontSize: 12,
                       fontWeight: 500,
                       cursor: 'pointer',
@@ -577,7 +577,7 @@ export function Reading({
 
             {/* Theme pills */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#3e3830', marginBottom: 10 }}>Theme</div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink70)', marginBottom: 10 }}>Theme</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['cream', 'sepia', 'midnight'] as const).map(t => (
                   <button
@@ -587,10 +587,10 @@ export function Reading({
                       flex: 1,
                       padding: '8px 4px',
                       borderRadius: 10,
-                      border: `2px solid ${theme === t ? '#c9924a' : '#dfd5bd'}`,
-                      backgroundColor: t === 'cream' ? '#fff' : t === 'sepia' ? '#2a2218' : '#15182a',
-                      color: t === 'cream' ? '#1f1b16' : '#e9dfc9',
-                      fontFamily: "'DM Sans', sans-serif",
+                      border: `2px solid ${theme === t ? 'var(--accent)' : 'var(--ink15)'}`,
+                      backgroundColor: t === 'cream' ? 'var(--bg)' : t === 'sepia' ? '#2a2218' : 'var(--dark-bg)',
+                      color: t === 'cream' ? 'var(--ink)' : 'var(--dark-ink)',
+                      fontFamily: "var(--sans)",
                       fontSize: 12,
                       fontWeight: 500,
                       cursor: 'pointer',
@@ -606,7 +606,7 @@ export function Reading({
                         height: 20,
                         borderRadius: '50%',
                         border: '1px solid rgba(0,0,0,0.1)',
-                        backgroundColor: t === 'cream' ? '#faf4e8' : t === 'sepia' ? '#3d3020' : '#262c47',
+                        backgroundColor: t === 'cream' ? 'var(--bg2)' : t === 'sepia' ? '#3d3020' : 'var(--dark-bg2)',
                       }}
                     />
                     {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -617,7 +617,7 @@ export function Reading({
 
             {/* Font family */}
             <div>
-              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#3e3830', marginBottom: 10 }}>Font</div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink70)', marginBottom: 10 }}>Font</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => onChangeFontFamily('serif')}
@@ -625,11 +625,11 @@ export function Reading({
                     flex: 1,
                     padding: '10px',
                     borderRadius: 10,
-                    border: `2px solid ${fontFamily === 'serif' ? '#c9924a' : '#dfd5bd'}`,
-                    backgroundColor: fontFamily === 'serif' ? '#faf4e8' : 'transparent',
-                    fontFamily: "'Newsreader', Georgia, serif",
+                    border: `2px solid ${fontFamily === 'serif' ? 'var(--accent)' : 'var(--ink15)'}`,
+                    backgroundColor: fontFamily === 'serif' ? 'var(--bg)' : 'transparent',
+                    fontFamily: "var(--serif)",
                     fontSize: 15,
-                    color: '#1f1b16',
+                    color: 'var(--ink)',
                     cursor: 'pointer',
                   }}
                 >
@@ -641,11 +641,11 @@ export function Reading({
                     flex: 1,
                     padding: '10px',
                     borderRadius: 10,
-                    border: `2px solid ${fontFamily === 'sans' ? '#c9924a' : '#dfd5bd'}`,
-                    backgroundColor: fontFamily === 'sans' ? '#faf4e8' : 'transparent',
-                    fontFamily: "'DM Sans', sans-serif",
+                    border: `2px solid ${fontFamily === 'sans' ? 'var(--accent)' : 'var(--ink15)'}`,
+                    backgroundColor: fontFamily === 'sans' ? 'var(--bg)' : 'transparent',
+                    fontFamily: "var(--sans)",
                     fontSize: 15,
-                    color: '#1f1b16',
+                    color: 'var(--ink)',
                     cursor: 'pointer',
                   }}
                 >
@@ -665,9 +665,9 @@ export function Reading({
             bottom: 48,
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: '#1f1b16',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            backgroundColor: 'var(--ink)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 13,
             fontWeight: 500,
             padding: '10px 20px',

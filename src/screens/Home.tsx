@@ -48,23 +48,23 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
           gap: 10,
           padding: '10px 14px',
           borderRadius: 14,
-          backgroundColor: '#fdf0ec',
-          border: '1px solid rgba(163,93,58,0.2)',
+          backgroundColor: 'color-mix(in srgb, var(--accent2) 8%, var(--bg))',
+          border: '1px solid color-mix(in srgb, var(--accent2) 20%, transparent)',
           animation: 'st-fade-in 0.15s ease both',
         }}
       >
-        <div style={{ flex: 1, fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#a35d3a' }}>
+        <div style={{ flex: 1, fontFamily: "var(--sans)", fontSize: 13, color: 'var(--accent2)' }}>
           Delete "{story.title}"?
         </div>
         <button
           onClick={onCancelDelete}
-          style={{ height: 34, padding: '0 14px', borderRadius: 10, border: '1px solid #dfd5bd', backgroundColor: '#faf4e8', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#76705f', cursor: 'pointer' }}
+          style={{ height: 34, padding: '0 14px', borderRadius: 10, border: '1px solid var(--ink15)', backgroundColor: 'var(--bg)', fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink50)', cursor: 'pointer' }}
         >
           Keep
         </button>
         <button
           onClick={onConfirmDelete}
-          style={{ height: 34, padding: '0 14px', borderRadius: 10, border: 'none', backgroundColor: '#a35d3a', fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: '#faf4e8', cursor: 'pointer' }}
+          style={{ height: 34, padding: '0 14px', borderRadius: 10, border: 'none', backgroundColor: 'var(--accent2)', fontFamily: "var(--sans)", fontSize: 13, fontWeight: 500, color: 'var(--bg)', cursor: 'pointer' }}
         >
           Delete
         </button>
@@ -80,7 +80,7 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
     >
       <button
         onClick={onOpen}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 14, backgroundColor: '#f3ead8', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 14, backgroundColor: 'var(--bg2)', border: 'none', cursor: 'pointer', textAlign: 'left' }}
       >
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <div
@@ -90,23 +90,23 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
               borderRadius: 4,
               background: story.illustration
                 ? `url(${story.illustration}) center/cover`
-                : 'linear-gradient(160deg, #c9924a, #a35d3a)',
+                : 'var(--cta)',
               overflow: 'hidden',
             }}
           />
           {story.bookmarked && (
-            <div style={{ position: 'absolute', top: -3, right: -3, width: 10, height: 10, borderRadius: '50%', backgroundColor: '#c9924a', border: '1.5px solid #faf4e8' }} />
+            <div style={{ position: 'absolute', top: -3, right: -3, width: 10, height: 10, borderRadius: '50%', backgroundColor: 'var(--accent)', border: '1.5px solid var(--bg)' }} />
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, color: '#1f1b16', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: "var(--serif)", fontSize: 15, color: 'var(--ink)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {story.title}
           </div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#76705f' }}>
+          <div style={{ fontFamily: "var(--sans)", fontSize: 12, color: 'var(--ink50)' }}>
             {formatStoryAge(story.generatedAt)} · {story.mode} · {story.destination || 'story'}
           </div>
         </div>
-        <Icon name="chevron-right" size={16} color="#b2aa97" />
+        <Icon name="chevron-right" size={16} color="var(--ink30)" />
       </button>
 
       <button
@@ -116,7 +116,7 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
         onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
         onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
       >
-        <Icon name="trash" size={15} color="#a35d3a" />
+        <Icon name="trash" size={15} color="var(--accent2)" />
       </button>
     </div>
   )
@@ -150,14 +150,14 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
   }
 
   return (
-    <div style={{ minHeight: '100dvh', backgroundColor: '#faf4e8', display: 'flex', flexDirection: 'column', animation: 'st-fade-in 0.3s ease both' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', animation: 'st-fade-in 0.3s ease both' }}>
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 8px' }}>
-        <div style={{ width: 34, height: 34, borderRadius: 11, background: 'linear-gradient(135deg, #c9924a, #a35d3a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 34, height: 34, borderRadius: 11, background: 'var(--cta)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="moon" size={18} color="white" strokeWidth={1.5} />
         </div>
-        <button onClick={onSettings} style={{ padding: 4, color: '#3e3830' }}>
-          <Icon name="settings" size={22} color="#3e3830" strokeWidth={1.5} />
+        <button onClick={onSettings} style={{ padding: 4, color: 'var(--ink70)' }}>
+          <Icon name="settings" size={22} color="var(--ink70)" strokeWidth={1.5} />
         </button>
       </div>
 
@@ -166,24 +166,24 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
         <div style={{ padding: '4px 20px 0', position: 'relative', zIndex: 51 }}>
           <button
             onClick={() => setShowProfileDropdown(v => !v)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px 4px 8px', borderRadius: 20, border: '1px solid #dfd5bd', backgroundColor: '#f3ead8', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#76705f', cursor: 'pointer' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px 4px 8px', borderRadius: 20, border: '1px solid var(--ink15)', backgroundColor: 'var(--bg2)', fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink50)', cursor: 'pointer' }}
           >
-            <span style={{ fontWeight: 500, color: '#3e3830' }}>{displayName}</span>
-            <Icon name="chevron-down" size={14} color="#76705f" />
+            <span style={{ fontWeight: 500, color: 'var(--ink70)' }}>{displayName}</span>
+            <Icon name="chevron-down" size={14} color="var(--ink50)" />
           </button>
 
           {showProfileDropdown && (
             <>
               <div onClick={() => { setShowProfileDropdown(false); setAddingProfile(false) }} style={{ position: 'fixed', inset: 0, zIndex: 49 }} />
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, backgroundColor: '#fff', borderRadius: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: '1px solid #ebdfc7', overflow: 'hidden', zIndex: 50, minWidth: 180 }}>
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, backgroundColor: 'var(--bg)', borderRadius: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: '1px solid var(--ink15)', overflow: 'hidden', zIndex: 50, minWidth: 180 }}>
                 {profiles.map(p => (
                   <button
                     key={p.id}
                     onClick={() => { onSetActiveProfile(p.id); setShowProfileDropdown(false) }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: 'none', borderBottom: '1px solid #ebdfc7', backgroundColor: p.id === activeProfileId ? '#faf4e8' : 'transparent', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#1f1b16', cursor: 'pointer', textAlign: 'left' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: 'none', borderBottom: '1px solid var(--ink15)', backgroundColor: p.id === activeProfileId ? 'var(--bg)' : 'transparent', fontFamily: "var(--sans)", fontSize: 14, color: 'var(--ink)', cursor: 'pointer', textAlign: 'left' }}
                   >
                     {p.name}
-                    {p.id === activeProfileId && <Icon name="check" size={14} color="#c9924a" strokeWidth={2} />}
+                    {p.id === activeProfileId && <Icon name="check" size={14} color="var(--accent)" strokeWidth={2} />}
                   </button>
                 ))}
                 {addingProfile ? (
@@ -196,15 +196,15 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
                       onKeyDown={e => { if (e.key === 'Enter') handleAddProfile() }}
                       onBlur={handleAddProfile}
                       placeholder="Name…"
-                      style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid #c9924a', backgroundColor: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#1f1b16', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--accent)', backgroundColor: 'var(--bg)', fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink)', boxSizing: 'border-box' }}
                     />
                   </div>
                 ) : (
                   <button
                     onClick={() => setAddingProfile(true)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '12px 16px', border: 'none', backgroundColor: 'transparent', fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#a35d3a', cursor: 'pointer', textAlign: 'left' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '12px 16px', border: 'none', backgroundColor: 'transparent', fontFamily: "var(--sans)", fontSize: 13, color: 'var(--accent2)', cursor: 'pointer', textAlign: 'left' }}
                   >
-                    <Icon name="plus" size={14} color="#a35d3a" strokeWidth={2} />
+                    <Icon name="plus" size={14} color="var(--accent2)" strokeWidth={2} />
                     Add profile
                   </button>
                 )}
@@ -216,26 +216,26 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
 
       {/* Greeting */}
       <div style={{ padding: '20px 24px 0' }}>
-        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: '#76705f', marginBottom: 4 }}>{greeting.label}</div>
-        <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 30, fontWeight: 400, color: '#1f1b16', lineHeight: 1.2, marginBottom: 24 }}>{greeting.time}</div>
+        <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink50)', marginBottom: 4 }}>{greeting.label}</div>
+        <div style={{ fontFamily: "var(--serif)", fontSize: 30, fontWeight: 400, color: 'var(--ink)', lineHeight: 1.2, marginBottom: 24 }}>{greeting.time}</div>
       </div>
 
       {/* Cards */}
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <button
           onClick={onParentEntry}
-          style={{ width: '100%', minHeight: 170, borderRadius: 22, background: 'linear-gradient(155deg, #2c3158, #15182a)', border: 'none', cursor: 'pointer', padding: '22px 22px 20px', textAlign: 'left', position: 'relative', overflow: 'hidden' }}
+          style={{ width: '100%', minHeight: 170, borderRadius: 22, background: 'linear-gradient(155deg, var(--dark-bg2), var(--dark-bg))', border: 'none', cursor: 'pointer', padding: '22px 22px 20px', textAlign: 'left', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', right: -30, bottom: -40, opacity: 0.18 }}>
-            <Icon name="moon" size={180} color="#e5b574" strokeWidth={0.8} />
+            <Icon name="moon" size={180} color="var(--accent-s)" strokeWidth={0.8} />
           </div>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#e5b574', marginBottom: 10 }}>By Situation</div>
-            <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 26, fontWeight: 400, color: '#e9dfc9', lineHeight: 1.2, marginBottom: 6 }}>Tonight's story</div>
-            <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: 'rgba(233,223,201,0.66)', lineHeight: 1.5, marginBottom: 18 }}>
+            <div style={{ fontFamily: "var(--sans)", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-s)', marginBottom: 10 }}>By Situation</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: 26, fontWeight: 400, color: 'var(--dark-ink)', lineHeight: 1.2, marginBottom: 6 }}>Tonight's story</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: 14, color: 'var(--dark-ink70)', lineHeight: 1.5, marginBottom: 18 }}>
               Tell me about {displayName}'s day — I'll shape it into a story by bedtime.
             </div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: '#faf4e8' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: "var(--sans)", fontSize: 14, fontWeight: 600, color: 'var(--bg)' }}>
               Start
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
             </div>
@@ -244,28 +244,28 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
 
         <button
           onClick={onTeenEntry}
-          style={{ width: '100%', minHeight: 128, borderRadius: 22, backgroundColor: '#ebdfc7', border: 'none', cursor: 'pointer', padding: '20px 22px', textAlign: 'left', position: 'relative', overflow: 'hidden' }}
+          style={{ width: '100%', minHeight: 128, borderRadius: 22, backgroundColor: 'var(--bg3)', border: 'none', cursor: 'pointer', padding: '20px 22px', textAlign: 'left', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ position: 'absolute', right: -20, bottom: -30, opacity: 0.4 }}>
-            <Icon name="sparkle" size={140} color="#a35d3a" strokeWidth={0.8} />
+            <Icon name="sparkle" size={140} color="var(--accent2)" strokeWidth={0.8} />
           </div>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#a35d3a', marginBottom: 8 }}>By Theme</div>
-            <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 24, fontWeight: 400, color: '#1f1b16', lineHeight: 1.2, marginBottom: 4 }}>Make my story</div>
-            <div style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 14, color: '#76705f', lineHeight: 1.5 }}>Pick a feeling and I'll write something just for tonight.</div>
+            <div style={{ fontFamily: "var(--sans)", fontSize: 10, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent2)', marginBottom: 8 }}>By Theme</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: 24, fontWeight: 400, color: 'var(--ink)', lineHeight: 1.2, marginBottom: 4 }}>Make my story</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: 14, color: 'var(--ink50)', lineHeight: 1.5 }}>Pick a feeling and I'll write something just for tonight.</div>
           </div>
         </button>
 
         {history.length > 0 && (
           <div style={{ marginTop: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingLeft: 2 }}>
-              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#76705f' }}>
+              <div style={{ fontFamily: "var(--sans)", fontSize: 10, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink50)' }}>
                 {showAllStories ? `All Stories (${history.length})` : 'Recent Stories'}
               </div>
               {history.length > 3 && (
                 <button
                   onClick={() => setShowAllStories(v => !v)}
-                  style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#a35d3a', cursor: 'pointer', padding: '2px 0' }}
+                  style={{ background: 'none', border: 'none', fontFamily: "var(--sans)", fontSize: 12, color: 'var(--accent2)', cursor: 'pointer', padding: '2px 0' }}
                 >
                   {showAllStories ? 'Show less' : `See all ${history.length}`}
                 </button>

@@ -47,7 +47,7 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#15182a',
+        backgroundColor: 'var(--dark-bg)',
         display: 'flex',
         flexDirection: 'column',
         padding: '20px 24px 40px',
@@ -56,19 +56,19 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
     >
       {/* Back */}
       <button onClick={onBack} style={{ padding: 4, alignSelf: 'flex-start', marginBottom: 'auto' }}>
-        <Icon name="chevron-left" size={24} color="#e9dfc9" />
+        <Icon name="chevron-left" size={24} color="var(--dark-ink)" />
       </button>
 
       {/* Center content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingBottom: 40 }}>
         <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
-            color: '#e5b574',
+            color: 'var(--accent-s)',
             marginBottom: 14,
           }}
         >
@@ -77,10 +77,10 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
 
         <h2
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 30,
             fontWeight: 400,
-            color: '#e9dfc9',
+            color: 'var(--dark-ink)',
             lineHeight: 1.2,
             marginBottom: 10,
           }}
@@ -90,7 +90,7 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
 
         <p
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 15,
             color: 'rgba(233,223,201,0.7)',
             lineHeight: 1.55,
@@ -115,9 +115,9 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
           >
             <div
               style={{
-                fontFamily: "'Newsreader', Georgia, serif",
+                fontFamily: "var(--serif)",
                 fontSize: 17,
-                color: '#e9dfc9',
+                color: 'var(--dark-ink)',
                 marginBottom: 2,
               }}
             >
@@ -125,9 +125,9 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
             </div>
             <div
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--sans)",
                 fontSize: 13,
-                color: '#e5b574',
+                color: 'var(--accent-s)',
               }}
             >
               Save it
@@ -147,9 +147,9 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
           >
             <div
               style={{
-                fontFamily: "'Newsreader', Georgia, serif",
+                fontFamily: "var(--serif)",
                 fontSize: 17,
-                color: '#e9dfc9',
+                color: 'var(--dark-ink)',
                 marginBottom: 2,
               }}
             >
@@ -157,7 +157,7 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
             </div>
             <div
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--sans)",
                 fontSize: 13,
                 color: 'rgba(233,223,201,0.5)',
               }}
@@ -179,7 +179,7 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
           >
             <div
               style={{
-                fontFamily: "'Newsreader', Georgia, serif",
+                fontFamily: "var(--serif)",
                 fontSize: 17,
                 color: 'rgba(233,223,201,0.6)',
                 marginBottom: 2,
@@ -189,7 +189,7 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
             </div>
             <div
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--sans)",
                 fontSize: 13,
                 color: 'rgba(233,223,201,0.35)',
               }}
@@ -215,12 +215,12 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
                 gap: 10,
               }}
             >
-              <Icon name="share" size={18} color="#c9924a" />
+              <Icon name="share" size={18} color="var(--accent)" />
               <span
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--sans)",
                   fontSize: 14,
-                  color: '#c9924a',
+                  color: 'var(--accent)',
                   fontWeight: 500,
                 }}
               >
@@ -234,7 +234,7 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
       {/* Footer */}
       <div
         style={{
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: "var(--mono)",
           fontSize: 10,
           color: 'rgba(233,223,201,0.3)',
           textTransform: 'uppercase',
@@ -253,9 +253,9 @@ export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: Afte
             bottom: 32,
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: '#1f1b16',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            backgroundColor: 'var(--ink)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 13,
             fontWeight: 500,
             padding: '10px 20px',

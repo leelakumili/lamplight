@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect, useState } from 'react'
 import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
 import { saveSetup, loadSetup, saveStory, loadStories, deleteStory, saveProfiles, loadProfiles, saveActiveProfileId, loadActiveProfileId } from './lib/db'
+import { getStoredTheme, applyTheme, type AppTheme } from './lib/theme'
 import { generateStory } from './lib/generateStory'
 import { generateIllustration } from './lib/illustration'
 import { generateId } from './lib/utils'
@@ -117,6 +118,12 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [loaded, setLoaded] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [appTheme, setAppTheme] = useState<AppTheme>(getStoredTheme)
+
+  // Apply theme to <html data-theme="..."> on mount and on change
+  useEffect(() => {
+    applyTheme(appTheme)
+  }, [appTheme])
 
   // Load persisted data
   useEffect(() => {
@@ -244,7 +251,7 @@ export default function App() {
       <div
         style={{
           minHeight: '100dvh',
-          backgroundColor: '#faf4e8',
+          backgroundColor: 'var(--bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -463,9 +470,11 @@ export default function App() {
             setup={setup}
             profiles={profiles}
             activeProfileId={activeProfileId}
+            appTheme={appTheme}
             onBack={() => nav('home')}
             onSave={handleSaveSetupChange}
             onSaveProfiles={handleSaveProfiles}
+            onChangeTheme={setAppTheme}
           />
         ) : null
 
@@ -474,13 +483,15 @@ export default function App() {
     }
   }
 
+  const isDark = screen === 'loading' || screen === 'after-story' || screen === 'reading'
+
   return (
     <div
       style={{
         display: 'flex',
         justifyContent: 'center',
         minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
+        backgroundColor: 'var(--bg)',
       }}
     >
       <div
@@ -489,7 +500,7 @@ export default function App() {
           maxWidth: 720,
           minHeight: '100dvh',
           position: 'relative',
-          backgroundColor: screen === 'loading' || screen === 'after-story' || screen === 'reading' ? '#15182a' : '#faf4e8',
+          backgroundColor: isDark ? 'var(--dark-bg)' : 'var(--bg)',
         }}
       >
         {renderScreen()}
@@ -502,9 +513,9 @@ export default function App() {
               bottom: 32,
               left: '50%',
               transform: 'translateX(-50%)',
-              backgroundColor: '#1f1b16',
-              color: '#faf4e8',
-              fontFamily: "'DM Sans', sans-serif",
+              backgroundColor: 'var(--ink)',
+              color: 'var(--bg)',
+              fontFamily: 'var(--sans)',
               fontSize: 13,
               fontWeight: 500,
               padding: '10px 20px',

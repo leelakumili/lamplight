@@ -36,7 +36,7 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#faf4e8',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         animation: 'st-fade-in 0.3s ease both',
@@ -52,7 +52,7 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
         }}
       >
         <button onClick={onBack} style={{ padding: 4 }}>
-          <Icon name="chevron-left" size={24} color="#3e3830" />
+          <Icon name="chevron-left" size={24} color="var(--ink70)" />
         </button>
         <ProgressDots total={3} filled={3} />
         <div style={{ width: 32 }} />
@@ -62,12 +62,12 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
       <div style={{ flex: 1, padding: '12px 24px 40px', overflowY: 'auto' }}>
         <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "var(--sans)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#76705f',
+            color: 'var(--ink50)',
             marginBottom: 10,
           }}
         >
@@ -75,11 +75,11 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
         </div>
         <h1
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 30,
             fontWeight: 400,
             lineHeight: 1.15,
-            color: '#1f1b16',
+            color: 'var(--ink)',
             marginBottom: 8,
           }}
         >
@@ -87,9 +87,9 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
         </h1>
         <p
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
+            fontFamily: "var(--serif)",
             fontSize: 16,
-            color: '#76705f',
+            color: 'var(--ink50)',
             lineHeight: 1.5,
             marginBottom: 28,
           }}
@@ -116,12 +116,12 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
               <label
                 style={{
                   display: 'block',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--sans)",
                   fontSize: 12,
                   fontWeight: 500,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  color: '#76705f',
+                  color: 'var(--ink50)',
                   marginBottom: 8,
                 }}
               >
@@ -134,11 +134,11 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 12,
-                  border: '1px solid #dfd5bd',
-                  backgroundColor: '#f3ead8',
-                  fontFamily: "'DM Sans', sans-serif",
+                  border: '1px solid var(--ink15)',
+                  backgroundColor: 'var(--bg2)',
+                  fontFamily: "var(--sans)",
                   fontSize: 15,
-                  color: '#1f1b16',
+                  color: 'var(--ink)',
                   appearance: 'none',
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2376705f' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -155,12 +155,12 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
               <label
                 style={{
                   display: 'block',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--sans)",
                   fontSize: 12,
                   fontWeight: 500,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  color: '#76705f',
+                  color: 'var(--ink50)',
                   marginBottom: 8,
                 }}
               >
@@ -176,11 +176,11 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                     width: '100%',
                     padding: '12px 44px 12px 14px',
                     borderRadius: 12,
-                    border: `1px solid ${apiKeyError ? '#a35d3a' : '#dfd5bd'}`,
-                    backgroundColor: '#f3ead8',
-                    fontFamily: "'DM Sans', sans-serif",
+                    border: `1px solid ${apiKeyError ? 'var(--accent2)' : 'var(--ink15)'}`,
+                    backgroundColor: 'var(--bg2)',
+                    fontFamily: "var(--sans)",
                     fontSize: 15,
-                    color: '#1f1b16',
+                    color: 'var(--ink)',
                   }}
                 />
                 <button
@@ -194,15 +194,15 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#76705f',
+                    color: 'var(--ink50)',
                     padding: 4,
                   }}
                 >
-                  <Icon name={showKey ? 'eye-off' : 'eye'} size={18} color="#76705f" />
+                  <Icon name={showKey ? 'eye-off' : 'eye'} size={18} color="var(--ink50)" />
                 </button>
               </div>
               {apiKeyError && (
-                <div style={{ marginTop: 4, fontSize: 12, color: '#a35d3a', fontFamily: "'DM Sans', sans-serif" }}>
+                <div style={{ marginTop: 4, fontSize: 12, color: 'var(--accent2)', fontFamily: "var(--sans)" }}>
                   {apiKeyError}
                 </div>
               )}
@@ -213,12 +213,12 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
             <label
               style={{
                 display: 'block',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "var(--sans)",
                 fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
-                color: '#76705f',
+                color: 'var(--ink50)',
                 marginBottom: 8,
               }}
             >
@@ -233,23 +233,23 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                 width: '100%',
                 padding: '12px 14px',
                 borderRadius: 12,
-                border: '1px solid #dfd5bd',
-                backgroundColor: '#f3ead8',
-                fontFamily: "'DM Sans', sans-serif",
+                border: '1px solid var(--ink15)',
+                backgroundColor: 'var(--bg2)',
+                fontFamily: "var(--sans)",
                 fontSize: 15,
-                color: '#1f1b16',
+                color: 'var(--ink)',
               }}
             />
             <div style={{ marginTop: 18 }}>
               <label
                 style={{
                   display: 'block',
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--sans)",
                   fontSize: 12,
                   fontWeight: 500,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  color: '#76705f',
+                  color: 'var(--ink50)',
                   marginBottom: 8,
                 }}
               >
@@ -264,14 +264,14 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 12,
-                  border: '1px solid #dfd5bd',
-                  backgroundColor: '#f3ead8',
-                  fontFamily: "'DM Sans', sans-serif",
+                  border: '1px solid var(--ink15)',
+                  backgroundColor: 'var(--bg2)',
+                  fontFamily: "var(--sans)",
                   fontSize: 15,
-                  color: '#1f1b16',
+                  color: 'var(--ink)',
                 }}
               />
-              <div style={{ marginTop: 6, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#76705f' }}>
+              <div style={{ marginTop: 6, fontFamily: "var(--sans)", fontSize: 12, color: 'var(--ink50)' }}>
                 Must match exactly what `ollama list` shows — e.g. mistral:latest, llama3.1, qwen2.5-coder:7b
               </div>
             </div>
@@ -284,19 +284,19 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
             marginTop: 28,
             padding: '16px',
             borderRadius: 14,
-            backgroundColor: '#f3ead8',
+            backgroundColor: 'var(--bg2)',
             display: 'flex',
             gap: 12,
             alignItems: 'flex-start',
           }}
         >
-          <Icon name="eye" size={20} color="#a35d3a" style={{ flexShrink: 0, marginTop: 1 }} />
+          <Icon name="eye" size={20} color="var(--accent2)" style={{ flexShrink: 0, marginTop: 1 }} />
           <p
             style={{
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "var(--sans)",
               fontSize: 13,
               lineHeight: 1.5,
-              color: '#3e3830',
+              color: 'var(--ink70)',
             }}
           >
             Your API key and all story data stays on this device. Stories are generated through the provider's API and never stored anywhere else.
@@ -310,9 +310,9 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
             width: '100%',
             height: 54,
             borderRadius: 14,
-            background: 'linear-gradient(135deg, #c9924a, #a35d3a)',
-            color: '#faf4e8',
-            fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--cta)',
+            color: 'var(--bg)',
+            fontFamily: "var(--sans)",
             fontSize: 16,
             fontWeight: 500,
             border: 'none',

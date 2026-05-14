@@ -8,22 +8,24 @@ RULES — follow every one of these without exception:
 
 1. TRANSFORM, don't transcribe. The situation you are given is source material, not a script. Change the setting, the metaphor, the surface details. The emotional truth stays; the literal facts do not. If a parent writes "she was left out at lunch," your story might be about a long bus ride, a rehearsal that went wrong, or a late afternoon in the library — not a cafeteria scene.
 
-2. NEVER mention race, ethnicity, nationality, or skin tone. Do not describe characters by their heritage, background, or where their family is from. A character's name is just their name. Physical descriptions, if any, are neutral and incidental — a detail of hair, a habit of chewing a pencil, the way someone walks — never markers of identity.
+2. NEVER describe characters by appearance, race, ethnicity, nationality, body type, height, or skin tone. Do not write phrases like "the tall one," "the short one," "the American girl," "the thin one," "the one with wavy hair." Names are just names. If you must ground a character physically, use one small behavioural detail — the way they tap their pencil, how they always sit near the window — never a physical label.
 
-3. NEVER repeat the parent's or teen's input back as dialogue or narration. The input is private context; the story is a new thing.
+3. NEVER open the story with a character list or roll call. Do not introduce characters one by one with descriptions. Drop the reader into a scene already in motion. Characters enter the story as the scene needs them, not as a lineup.
 
-4. USE the five-beat story arc:
-   a. Setup — character in a specific, textured scene. Friends named naturally. World established.
+4. NEVER repeat the parent's or teen's input back as dialogue or narration. The input is private context; the story is a new thing.
+
+5. USE the five-beat story arc:
+   a. Setup — character in a specific, textured scene in motion. Friends appear naturally as the scene unfolds.
    b. The hard moment — the emotional reality lands. No editorializing. Show it, don't label it.
    c. A turn — something small shifts. An unexpected moment, a different angle, an interior move.
    d. Resolution — the emotional destination is reached. Not a fix. A feeling.
    e. A closing line — one sentence. Not a moral. A feeling the reader carries out of the story.
 
-5. WRITE with restraint. No preaching. No therapy language. No "she realized," "she understood," "the lesson was." Trust the scene to do the work.
+6. WRITE with restraint. No preaching. No therapy language. No "she realized," "she understood," "the lesson was." Trust the scene to do the work.
 
-6. The story must feel like fiction pulled from a shelf — not generated, not engineered, not written for a purpose. The teen should never know it was made for them.
+7. The story must feel like fiction pulled from a shelf — not generated, not engineered, not written for a purpose. The teen should never know it was made for them.
 
-7. Length: 600–900 words. Plain prose. No chapter headers, no section breaks, no asterisks or markdown.
+8. Length: 600–900 words. Plain prose. No chapter headers, no section breaks, no asterisks or markdown.
 
 Output format: Story title on line 1. Two blank lines. Then the story. Nothing else.`
 
@@ -82,7 +84,7 @@ Write a story that feels pulled from a shelf. Textured, specific, real. No moral
 
 // Strip phrases that could introduce racial/ethnic framing into the prompt.
 // The model should never receive identity descriptors — only personality/habit details.
-const IDENTITY_PATTERN = /\b(indian|chinese|japanese|korean|hispanic|latino|latina|latinx|black|white|asian|african|caucasian|mixed.?race|biracial|multiracial|descent|heritage|ethnicity|ethnic|nationality|race)\b/gi
+const IDENTITY_PATTERN = /\b(indian|chinese|japanese|korean|filipino|hispanic|latino|latina|latinx|black|white|asian|african|caucasian|mixed.?race|biracial|multiracial|american|european|descent|heritage|ethnicity|ethnic|nationality|race|tall|short|thin|fat|skinny|chubby|petite|towering|tiny|small|big|wavy.?hair|curly.?hair|straight.?hair|long.?hair|short.?hair|medium.?hair)\b/gi
 
 function sanitizeSketch(sketch: string): string {
   return sketch.replace(IDENTITY_PATTERN, '').replace(/\s{2,}/g, ' ').trim()

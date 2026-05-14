@@ -369,42 +369,76 @@ export function Settings({ setup: initialSetup, onBack, onSave }: SettingsProps)
             />
           </Row>
           {setup.useLocal && (
-            <>
-              <Row label="Ollama URL">
+            <div style={{ padding: '4px 16px 14px' }}>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: '#76705f',
+                  marginBottom: 6,
+                }}>
+                  Ollama URL
+                </div>
                 <input
                   type="text"
                   value={setup.ollamaUrl}
                   onChange={e => update('ollamaUrl', e.target.value)}
                   placeholder="http://localhost:11434"
                   style={{
-                    background: 'none',
-                    border: 'none',
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid #dfd5bd',
+                    backgroundColor: '#faf4e8',
                     fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    color: '#76705f',
-                    textAlign: 'right',
-                    maxWidth: 180,
+                    fontSize: 14,
+                    color: '#1f1b16',
+                    boxSizing: 'border-box',
                   }}
                 />
-              </Row>
-              <Row label="Model name" last>
+              </div>
+              <div>
+                <div style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: '#76705f',
+                  marginBottom: 6,
+                }}>
+                  Model name
+                </div>
                 <input
                   type="text"
                   value={setup.ollamaModel || ''}
                   onChange={e => update('ollamaModel', e.target.value)}
-                  placeholder="mistral"
+                  placeholder="e.g. gemma3:12b, llama3.1, mistral"
                   style={{
-                    background: 'none',
-                    border: 'none',
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid #dfd5bd',
+                    backgroundColor: '#faf4e8',
                     fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 13,
-                    color: '#76705f',
-                    textAlign: 'right',
-                    maxWidth: 180,
+                    fontSize: 14,
+                    color: '#1f1b16',
+                    boxSizing: 'border-box',
                   }}
                 />
-              </Row>
-            </>
+                <div style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 11,
+                  color: '#b2aa97',
+                  marginTop: 5,
+                }}>
+                  Must match exactly what `ollama list` shows
+                </div>
+              </div>
+            </div>
           )}
           {!setup.useLocal && <div style={{ height: 1 }} />}
         </Card>

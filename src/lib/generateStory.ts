@@ -1,36 +1,91 @@
 import type { Setup, ParentInterview } from '../types'
 
-const SYSTEM_PROMPT = `You are a children's author specializing in stories for teens aged 10–16.
-You write with emotional intelligence, not didacticism.
-You never preach. You never use the word "lesson".
-You show, you don't tell.
-The story must feel like fiction, not therapy.
-Output format: Start with a story title on line 1, then two blank lines, then the story. Plain prose, no headers, no chapter labels, no asterisks or markdown. 600–900 words.`
+const SYSTEM_PROMPT = `You are a literary author who writes short fiction for teens aged 10–16.
+
+YOUR CORE JOB: Transform a real emotional situation into a fictional story that lets the reader feel understood — without ever feeling like they're being talked about or studied.
+
+RULES — follow every one of these without exception:
+
+1. TRANSFORM, don't transcribe. The situation you are given is source material, not a script. Change the setting, the metaphor, the surface details. The emotional truth stays; the literal facts do not. If a parent writes "she was left out at lunch," your story might be about a long bus ride, a rehearsal that went wrong, or a late afternoon in the library — not a cafeteria scene.
+
+2. NEVER mention race, ethnicity, nationality, or skin tone. Do not describe characters by their heritage, background, or where their family is from. A character's name is just their name. Physical descriptions, if any, are neutral and incidental — a detail of hair, a habit of chewing a pencil, the way someone walks — never markers of identity.
+
+3. NEVER repeat the parent's or teen's input back as dialogue or narration. The input is private context; the story is a new thing.
+
+4. USE the five-beat story arc:
+   a. Setup — character in a specific, textured scene. Friends named naturally. World established.
+   b. The hard moment — the emotional reality lands. No editorializing. Show it, don't label it.
+   c. A turn — something small shifts. An unexpected moment, a different angle, an interior move.
+   d. Resolution — the emotional destination is reached. Not a fix. A feeling.
+   e. A closing line — one sentence. Not a moral. A feeling the reader carries out of the story.
+
+5. WRITE with restraint. No preaching. No therapy language. No "she realized," "she understood," "the lesson was." Trust the scene to do the work.
+
+6. The story must feel like fiction pulled from a shelf — not generated, not engineered, not written for a purpose. The teen should never know it was made for them.
+
+7. Length: 600–900 words. Plain prose. No chapter headers, no section breaks, no asterisks or markdown.
+
+Output format: Story title on line 1. Two blank lines. Then the story. Nothing else.`
 
 function buildParentPrompt(setup: Setup, interview: ParentInterview): string {
-  const emotionsStr = interview.emotions.join(', ')
-  const friendsStr = setup.friends.join(', ')
-  return `Write a story with the following context:
-- Main character name: ${setup.name}
-- Character appearance and personality: ${setup.characterSketch || 'a typical teen'}
-- Friend names who appear in the story: ${friendsStr || 'none specified'}
-- What happened today: ${interview.moment}
-- Who was involved: ${interview.whoNote || interview.whoWasThere.join(', ')}
-- How they felt: ${emotionsStr} — ${interview.emotionNote}
-- Emotional destination: ${interview.destination}
-- Story length: 600–900 words`
+  const emotionsStr = interview.emotions.length > 0 ? interview.emotions.join(', ') : 'unspecified'
+  const friendsStr = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
+  const whoNote = interview.whoNote?.trim() || interview.whoWasThere.join(', ') || 'unspecified'
+  const emotionNote = interview.emotionNote?.trim() || ''
+  const sketch = sanitizeSketch(setup.characterSketch || '')
+
+  return `Use the following as source material — transform it into original fiction, do not retell it.
+
+MAIN CHARACTER
+Name: ${setup.name}
+${sketch ? `Personality / details (use sparingly for texture, never as identity markers): ${sketch}` : ''}
+
+FRIENDS WHO APPEAR IN THE STORY (use these names naturally — they are just names)
+${friendsStr}
+
+WHAT HAPPENED (this is private parent context — reshape it entirely, do not quote or paraphrase it)
+${interview.moment}
+
+WHO WAS INVOLVED
+${whoNote}
+
+HOW THE CHARACTER FELT
+${emotionsStr}${emotionNote ? `\nAdditional note: ${emotionNote}` : ''}
+
+WHERE THE STORY SHOULD LEAVE THE READER (emotional destination — not a plot instruction)
+${interview.destination}
+
+Remember: change the surface, keep the emotional core. The teen will read this as a normal bedtime story.`
 }
 
 function buildTeenPrompt(setup: Setup, theme: string): string {
-  const friendsStr = setup.friends.join(', ')
-  return `Write a story with the following context:
-- Main character name: ${setup.name}
-- Character appearance and personality: ${setup.characterSketch || 'a typical teen'}
-- Friend names who appear in the story: ${friendsStr || 'none specified'}
-- Theme: ${theme}
-- The story should naturally explore this theme without naming it directly
-- Emotional destination: a hopeful, warm resolution that fits the theme
-- Story length: 600–900 words`
+  const friendsStr = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
+  const sketch = sanitizeSketch(setup.characterSketch || '')
+
+  return `Write an original short story for a teen using the following as your brief.
+
+MAIN CHARACTER
+Name: ${setup.name}
+${sketch ? `Personality / details (use as light texture only, never as identity labels): ${sketch}` : ''}
+
+FRIENDS WHO APPEAR IN THE STORY (names only — do not describe or label them)
+${friendsStr}
+
+EMOTIONAL THEME (do not name this theme in the story — let the situation carry it)
+${theme}
+
+EMOTIONAL DESTINATION
+A warm, quiet resolution. The character doesn't solve the problem — they find a way to hold it differently.
+
+Write a story that feels pulled from a shelf. Textured, specific, real. No moralizing.`
+}
+
+// Strip phrases that could introduce racial/ethnic framing into the prompt.
+// The model should never receive identity descriptors — only personality/habit details.
+const IDENTITY_PATTERN = /\b(indian|chinese|japanese|korean|hispanic|latino|latina|latinx|black|white|asian|african|caucasian|mixed.?race|biracial|multiracial|descent|heritage|ethnicity|ethnic|nationality|race)\b/gi
+
+function sanitizeSketch(sketch: string): string {
+  return sketch.replace(IDENTITY_PATTERN, '').replace(/\s{2,}/g, ' ').trim()
 }
 
 function parseResponse(text: string): { title: string; content: string } {

@@ -74,6 +74,10 @@ export function Reading({
   const pageNum = String(page + 1).padStart(2, '0')
   const totalNum = String(totalPages).padStart(2, '0')
 
+  const wordCount = story.content.trim().split(/\s+/).length
+  const readingMins = Math.max(1, Math.round(wordCount / 200))
+  const readingLabel = readingMins === 1 ? '~1 min read' : `~${readingMins} min read`
+
   return (
     <div
       style={{
@@ -125,21 +129,42 @@ export function Reading({
           Back
         </button>
 
-        {/* Chapter label */}
+        {/* Center pill — mode label + reading time */}
         <div
           style={{
-            padding: '8px 14px',
+            padding: '6px 14px',
             borderRadius: 20,
             backgroundColor: 'rgba(15,16,26,0.7)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(233,223,201,0.12)',
-            fontFamily: "'Newsreader', Georgia, serif",
-            fontSize: 13,
-            fontStyle: 'italic',
-            color: '#c9924a',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1,
           }}
         >
-          {story.mode === 'parent' ? 'Tonight\'s Story' : 'Your Story'}
+          <div
+            style={{
+              fontFamily: "'Newsreader', Georgia, serif",
+              fontSize: 12,
+              fontStyle: 'italic',
+              color: '#c9924a',
+              lineHeight: 1.2,
+            }}
+          >
+            {story.mode === 'parent' ? 'Tonight\'s Story' : 'Your Story'}
+          </div>
+          <div
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 10,
+              color: 'rgba(233,223,201,0.45)',
+              letterSpacing: '0.06em',
+              lineHeight: 1.2,
+            }}
+          >
+            {readingLabel}
+          </div>
         </div>
 
         {/* Type-sheet icon */}

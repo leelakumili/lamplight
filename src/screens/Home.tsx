@@ -128,13 +128,14 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [addingProfile, setAddingProfile] = useState(false)
   const [newProfileName, setNewProfileName] = useState('')
+  const [showAllStories, setShowAllStories] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => setGreeting(getGreeting()), 30000)
     return () => clearInterval(interval)
   }, [])
 
-  const recentStories = history.slice(0, 3)
+  const visibleStories = showAllStories ? history : history.slice(0, 3)
   const activeProfile = profiles.find(p => p.id === activeProfileId)
   const displayName = activeProfile?.name || setup.name
 
@@ -255,11 +256,23 @@ export function Home({ setup, history, profiles, activeProfileId, onParentEntry,
           </div>
         </button>
 
-        {recentStories.length > 0 && (
+        {history.length > 0 && (
           <div style={{ marginTop: 8 }}>
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#76705f', marginBottom: 12, paddingLeft: 2 }}>Recent Stories</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingLeft: 2 }}>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#76705f' }}>
+                {showAllStories ? `All Stories (${history.length})` : 'Recent Stories'}
+              </div>
+              {history.length > 3 && (
+                <button
+                  onClick={() => setShowAllStories(v => !v)}
+                  style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: '#a35d3a', cursor: 'pointer', padding: '2px 0' }}
+                >
+                  {showAllStories ? 'Show less' : `See all ${history.length}`}
+                </button>
+              )}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {recentStories.map(story => (
+              {visibleStories.map(story => (
                 <StoryRow
                   key={story.id}
                   story={story}

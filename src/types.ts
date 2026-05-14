@@ -92,3 +92,4 @@ export type AppAction =
   | { type: 'SET_ACTIVE_PROFILE'; id: string }
   | { type: 'ADD_PROFILE'; profile: Profile }
   | { type: 'UPDATE_ACTIVE_PROFILE'; profile: Partial<Profile> }
+  | { type: 'UPDATE_STORY_ILLUSTRATION'; id: string; illustration: string }

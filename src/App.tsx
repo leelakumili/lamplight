@@ -99,6 +99,15 @@ function reducer(state: AppState, action: AppAction): AppState {
       )
       return { ...state, profiles }
     }
+    case 'UPDATE_STORY_ILLUSTRATION': {
+      const history = state.history.map(s =>
+        s.id === action.id ? { ...s, illustration: action.illustration } : s
+      )
+      const currentStory = state.currentStory?.id === action.id
+        ? { ...state.currentStory, illustration: action.illustration }
+        : state.currentStory
+      return { ...state, history, currentStory }
+    }
     default:
       return state
   }
@@ -164,24 +173,34 @@ export default function App() {
     nav('home')
   }
 
+  // Merge active profile (name, age, friends, sketch) into setup for generation.
+  // Falls back to the main setup fields if the profile field is empty.
+  function getEffectiveSetup(): Setup {
+    if (!state.setup) return state.setup!
+    const profile = state.profiles.find(p => p.id === state.activeProfileId)
+    if (!profile) return state.setup
+    return {
+      ...state.setup,
+      name: profile.name || state.setup.name,
+      age: profile.age || state.setup.age,
+      friends: profile.friends.length > 0 ? profile.friends : state.setup.friends,
+      characterSketch: profile.characterSketch || state.setup.characterSketch,
+    }
+  }
+
   async function startGeneration(mode: 'parent' | 'teen') {
     if (!state.setup) return
+    const effectiveSetup = getEffectiveSetup()
     nav('loading')
 
     try {
       const result = await generateStory({
-        setup: state.setup,
+        setup: effectiveSetup,
         mode,
         interview: mode === 'parent' ? state.interview : undefined,
         theme: mode === 'teen' ? state.selectedTheme || undefined : undefined,
         onInputSanitized: () => showToast('Some input was removed for safety.', 4000),
       })
-
-      // Generate illustration in parallel with the loading phase (non-blocking if it fails)
-      const illustration = await generateIllustration(
-        { title: result.title, content: result.content, destination: mode === 'parent' ? state.interview.destination : state.selectedTheme || '', id: '', generatedAt: 0, mode },
-        state.setup
-      ).catch(() => null)
 
       const story: Story = {
         id: generateId(),
@@ -190,18 +209,24 @@ export default function App() {
         destination: mode === 'parent' ? state.interview.destination : state.selectedTheme || '',
         generatedAt: Date.now(),
         mode,
-        illustration: illustration ?? undefined,
       }
 
       await saveStory(story)
       dispatch({ type: 'ADD_STORY', story })
       dispatch({ type: 'SET_CURRENT_STORY', story })
 
-      if (mode === 'parent') {
-        dispatch({ type: 'CLEAR_INTERVIEW' })
-      }
-
+      if (mode === 'parent') dispatch({ type: 'CLEAR_INTERVIEW' })
       nav('reading')
+
+      // Generate illustration in the background — user can read immediately.
+      // When ready, update the story in state and DB.
+      if (!effectiveSetup.useLocal) {
+        generateIllustration(story, effectiveSetup).then(illustration => {
+          if (!illustration) return
+          dispatch({ type: 'UPDATE_STORY_ILLUSTRATION', id: story.id, illustration })
+          saveStory({ ...story, illustration })
+        }).catch(() => {})
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong'
       showToast(`Error: ${msg}`)
@@ -308,10 +333,11 @@ export default function App() {
           />
         ) : null
 
-      case 'parent-q1':
+      case 'parent-q1': {
+        const es1 = getEffectiveSetup()
         return setup ? (
           <ParentQ1
-            name={setup.name}
+            name={es1.name}
             moment={interview.moment}
             onBack={() => nav('home')}
             onContinue={moment => {
@@ -321,11 +347,13 @@ export default function App() {
             onSkip={() => nav('parent-q2')}
           />
         ) : null
+      }
 
-      case 'parent-q2':
+      case 'parent-q2': {
+        const es2 = getEffectiveSetup()
         return setup ? (
           <ParentQ2
-            friends={setup.friends}
+            friends={es2.friends}
             whoWasThere={interview.whoWasThere}
             whoNote={interview.whoNote}
             onBack={() => nav('parent-q1')}
@@ -336,11 +364,13 @@ export default function App() {
             onSkip={() => nav('parent-q3')}
           />
         ) : null
+      }
 
-      case 'parent-q3':
+      case 'parent-q3': {
+        const es3 = getEffectiveSetup()
         return setup ? (
           <ParentQ3
-            name={setup.name}
+            name={es3.name}
             emotions={interview.emotions}
             emotionNote={interview.emotionNote}
             onBack={() => nav('parent-q2')}
@@ -351,6 +381,7 @@ export default function App() {
             onSkip={() => nav('parent-q4')}
           />
         ) : null
+      }
 
       case 'parent-q4':
         return (
@@ -365,10 +396,11 @@ export default function App() {
           />
         )
 
-      case 'teen-themes':
+      case 'teen-themes': {
+        const est = getEffectiveSetup()
         return setup ? (
           <TeenThemes
-            name={setup.name}
+            name={est.name}
             onBack={() => nav('home')}
             onSelect={theme => {
               dispatch({ type: 'SET_SELECTED_THEME', theme })
@@ -376,6 +408,7 @@ export default function App() {
             }}
           />
         ) : null
+      }
 
       case 'loading':
         return (
@@ -407,20 +440,11 @@ export default function App() {
       case 'after-story':
         return currentStory ? (
           <AfterStory
-            mode={currentStory.mode}
             story={{ title: currentStory.title, content: currentStory.content }}
             onBack={() => nav('reading')}
             onSave={() => {
               showToast('Story saved.')
               nav('home')
-            }}
-            onWriteAnother={() => {
-              dispatch({ type: 'SET_CURRENT_STORY', story: null })
-              if (currentStory.mode === 'teen') {
-                nav('teen-themes')
-              } else {
-                nav('parent-q1')
-              }
             }}
             onRegenerate={() => {
               dispatch({ type: 'SET_CURRENT_STORY', story: null })

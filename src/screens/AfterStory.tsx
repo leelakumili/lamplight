@@ -2,16 +2,14 @@ import React, { useState } from 'react'
 import { Icon } from '../components/Icon'
 
 interface AfterStoryProps {
-  mode: 'parent' | 'teen'
   story: { title: string; content: string }
   onSave: () => void
-  onWriteAnother: () => void
   onDone: () => void
   onBack: () => void
   onRegenerate: () => void
 }
 
-export function AfterStory({ mode, story, onSave, onWriteAnother, onDone, onBack, onRegenerate }: AfterStoryProps) {
+export function AfterStory({ story, onSave, onDone, onBack, onRegenerate }: AfterStoryProps) {
   const [shareToast, setShareToast] = useState<string | null>(null)
 
   const canShare = typeof navigator !== 'undefined' && (!!navigator.share || !!navigator.clipboard)

@@ -1,4 +1,5 @@
 import type { Setup, ParentInterview } from '../types'
+import { sanitizeInput, checkSafety } from './safety'
 
 const SYSTEM_PROMPT = `You are a literary author writing short fiction for teens aged 10–16.
 
@@ -200,22 +201,56 @@ export async function generateStory(params: {
   interview?: ParentInterview
   theme?: string
   onProgress?: (text: string) => void
+  onInputSanitized?: () => void
 }): Promise<{ title: string; content: string }> {
-  const { setup, mode, interview, theme } = params
+  const { setup, mode, theme } = params
+
+  // Sanitize interview inputs before they reach the prompt
+  let interview = params.interview
+  if (mode === 'parent' && interview) {
+    const fields: (keyof ParentInterview)[] = ['moment', 'whoNote', 'emotionNote', 'destination']
+    let wasFlagged = false
+    const cleaned = { ...interview }
+    for (const field of fields) {
+      const val = cleaned[field]
+      if (typeof val === 'string') {
+        const result = sanitizeInput(val)
+        if (result.wasFlagged) { wasFlagged = true; (cleaned as Record<string, unknown>)[field] = result.text }
+      }
+    }
+    if (wasFlagged) {
+      interview = cleaned
+      params.onInputSanitized?.()
+    }
+  }
 
   const userPrompt = mode === 'parent' && interview
     ? buildParentPrompt(setup, interview)
     : buildTeenPrompt(setup, theme || 'Just somewhere else')
 
-  let rawText: string
-
-  if (setup.useLocal) {
-    rawText = await callOllama(setup.ollamaUrl || 'http://localhost:11434', setup.ollamaModel || 'mistral', SYSTEM_PROMPT, userPrompt)
-  } else if (setup.provider === 'claude') {
-    rawText = await callClaude(setup.apiKey, SYSTEM_PROMPT, userPrompt)
-  } else {
-    rawText = await callOpenAI(setup.apiKey, SYSTEM_PROMPT, userPrompt)
+  async function callProvider(): Promise<string> {
+    if (setup.useLocal) {
+      return callOllama(setup.ollamaUrl || 'http://localhost:11434', setup.ollamaModel || 'mistral', SYSTEM_PROMPT, userPrompt)
+    } else if (setup.provider === 'claude') {
+      return callClaude(setup.apiKey, SYSTEM_PROMPT, userPrompt)
+    } else {
+      return callOpenAI(setup.apiKey, SYSTEM_PROMPT, userPrompt)
+    }
   }
 
-  return parseResponse(rawText)
+  // Generate with up to 2 safety retries
+  const MAX_ATTEMPTS = 3
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const rawText = await callProvider()
+    const { safe } = checkSafety(rawText)
+    if (safe) return parseResponse(rawText)
+    // Last attempt failed — surface a clear error
+    if (attempt === MAX_ATTEMPTS - 1) {
+      throw new Error('The story contained content that isn\'t appropriate for this app. Please try again.')
+    }
+    // Otherwise loop and regenerate silently
+  }
+
+  // Unreachable, but TypeScript needs it
+  throw new Error('Story generation failed.')
 }

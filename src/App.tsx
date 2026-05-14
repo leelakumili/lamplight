@@ -173,6 +173,7 @@ export default function App() {
         mode,
         interview: mode === 'parent' ? state.interview : undefined,
         theme: mode === 'teen' ? state.selectedTheme || undefined : undefined,
+        onInputSanitized: () => showToast('Some input was removed for safety.', 4000),
       })
 
       const story: Story = {

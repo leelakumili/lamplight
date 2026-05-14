@@ -23,50 +23,76 @@ const THEME_COLORS = {
   midnight: { bg: '#15182a', text: '#e9dfc9', scene1: '#0f1020', scene2: '#15182a', scene3: '#1c2138' },
 }
 
+const SCENE_PALETTES = {
+  midnight: { sky: '#1c2138', mid: '#2a3052', low: '#3c3a4f', ground: '#0f1020', glow: '#c9924a', silhouette: '#080c16' },
+  sepia:    { sky: '#2a1e0e', mid: '#3a2a14', low: '#2e2010', ground: '#1a1008', glow: '#d4a056', silhouette: '#120c04' },
+  cream:    { sky: '#b8ccdc', mid: '#d4c8a8', low: '#c8bc98', ground: '#b0a888', glow: '#c9924a', silhouette: '#8c7e60' },
+}
+
 function ImmersiveScene({ theme }: { theme: 'cream' | 'sepia' | 'midnight' }) {
+  const p = SCENE_PALETTES[theme]
   const isDark = theme !== 'cream'
-  const skyColor = isDark ? (theme === 'sepia' ? '#1a1008' : '#0a0c1a') : '#c5d8e8'
-  const midColor = isDark ? (theme === 'sepia' ? '#2a1a08' : '#15182a') : '#e8dfc8'
-  const lowColor = isDark ? (theme === 'sepia' ? '#1a1208' : '#1c2138') : '#d8cfb8'
-  const glowColor = isDark ? '#c9924a' : '#e5b574'
-  const silouetteColor = isDark ? '#08080f' : '#c8bfa8'
 
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      {/* Sky gradient */}
+      {/* Sky → mid → low gradient */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: `linear-gradient(180deg, ${skyColor} 0%, ${midColor} 60%, ${lowColor} 100%)`,
+          background: `linear-gradient(180deg, ${p.sky} 0%, ${p.mid} 55%, ${p.low} 100%)`,
         }}
       />
 
-      {/* Amber glow */}
+      {/* Warm glow — moon/lamp source, upper right */}
       <div
         style={{
           position: 'absolute',
-          top: '20%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 300,
-          height: 300,
+          top: '8%',
+          right: '18%',
+          width: 260,
+          height: 260,
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${glowColor}22 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${p.glow}55 0%, ${p.glow}22 45%, transparent 70%)`,
+          filter: 'blur(4px)',
+        }}
+      />
+      {/* Bright core of the glow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '11%',
+          right: '24%',
+          width: 80,
+          height: 80,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${p.glow}99 0%, ${p.glow}33 60%, transparent 80%)`,
         }}
       />
 
-      {/* SVG Rooftop silhouette */}
+      {/* Horizon line */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: '32%',
+          height: 1,
+          background: isDark ? 'rgba(229,181,116,0.18)' : 'rgba(31,27,22,0.14)',
+        }}
+      />
+
+      {/* SVG rooftop silhouette */}
       <svg
-        style={{ position: 'absolute', bottom: '28%', left: 0, right: 0, width: '100%' }}
-        viewBox="0 0 430 120"
+        style={{ position: 'absolute', bottom: '28%', left: 0, width: '100%', height: 110 }}
+        viewBox="0 0 430 110"
         preserveAspectRatio="none"
-        fill={silouetteColor}
+        fill={p.silhouette}
       >
-        <path d="M0 120 L0 80 L30 80 L30 55 L60 30 L90 55 L90 70 L130 70 L130 45 L160 20 L190 45 L190 70 L220 70 L220 50 L240 25 L260 50 L260 65 L290 65 L290 50 L310 30 L330 50 L330 80 L360 80 L360 55 L390 40 L420 55 L420 80 L430 80 L430 120 Z" />
+        <path d="M0 110 L0 75 L25 75 L25 52 L55 28 L85 52 L85 68 L125 68 L125 42 L155 18 L185 42 L185 68 L215 68 L215 48 L238 24 L258 48 L258 63 L285 63 L285 48 L308 28 L328 48 L328 75 L358 75 L358 52 L385 38 L415 52 L415 75 L430 75 L430 110 Z" />
       </svg>
 
-      {/* Ground texture stripes */}
+      {/* Ground */}
       <div
         style={{
           position: 'absolute',
@@ -74,19 +100,18 @@ function ImmersiveScene({ theme }: { theme: 'cream' | 'sepia' | 'midnight' }) {
           left: 0,
           right: 0,
           height: '28%',
-          background: isDark
-            ? 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px)'
-            : 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px)',
-          backgroundColor: isDark ? (theme === 'sepia' ? '#140e06' : '#0c0e18') : '#c8bfa8',
+          backgroundColor: p.ground,
+          background: `repeating-linear-gradient(0deg, ${p.ground}, ${p.ground} 3px, transparent 3px, transparent 14px), ${p.ground}`,
+          opacity: isDark ? 1 : 0.6,
         }}
       />
 
-      {/* Vignette */}
+      {/* Vignette edges */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)',
+          background: `radial-gradient(ellipse at 50% 40%, transparent 35%, ${isDark ? 'rgba(5,6,14,0.65)' : 'rgba(20,16,10,0.35)'} 100%)`,
         }}
       />
     </div>

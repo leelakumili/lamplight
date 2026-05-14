@@ -1,5 +1,5 @@
 import type { Setup, ParentInterview } from '../types'
-import { sanitizeInput, checkSafety } from './safety'
+import { sanitizeInput, checkSafetySmart } from './safety'
 
 const SYSTEM_PROMPT = `You are a literary author writing short fiction for teens aged 10–16.
 
@@ -238,11 +238,13 @@ export async function generateStory(params: {
     }
   }
 
+  const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider, apiKey: setup.apiKey }
+
   // Generate with up to 2 safety retries
   const MAX_ATTEMPTS = 3
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const rawText = await callProvider()
-    const { safe } = checkSafety(rawText)
+    const { safe } = await checkSafetySmart(rawText, safetyOpts)
     if (safe) return parseResponse(rawText)
     // Last attempt failed — surface a clear error
     if (attempt === MAX_ATTEMPTS - 1) {

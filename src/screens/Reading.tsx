@@ -283,7 +283,7 @@ export function Reading({
         </div>
       </div>
 
-      {/* Title zone — top half background */}
+      {/* Title zone — top 38% */}
       <div
         style={{
           position: 'fixed',
@@ -293,42 +293,79 @@ export function Reading({
           maxWidth: 720,
           margin: '0 auto',
           height: '38%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '72px 32px 16px',
-          pointerEvents: 'none',
+          overflow: 'hidden',
           zIndex: 5,
+          pointerEvents: 'none',
         }}
       >
+        {/* Illustration background */}
+        {story.illustration && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(${story.illustration})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center top',
+            }}
+          />
+        )}
+
+        {/* Gradient overlay — always present, heavier when illustration shows */}
         <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 10,
-            fontWeight: 500,
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            color: theme === 'cream' ? '#76705f' : 'rgba(229,181,116,0.6)',
-            marginBottom: 12,
+            position: 'absolute',
+            inset: 0,
+            background: story.illustration
+              ? 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%)'
+              : THEME_BG[theme],
           }}
-        >
-          {story.mode === 'parent' ? 'A story for tonight' : 'Your story'}
-        </div>
+        />
+
+        {/* Title text */}
         <div
           style={{
-            fontFamily: "'Newsreader', Georgia, serif",
-            fontSize: 28,
-            fontWeight: 400,
-            lineHeight: 1.2,
-            letterSpacing: '-0.015em',
-            color: theme === 'cream' ? '#1f1b16' : '#e9dfc9',
-            textAlign: 'center',
-            opacity: slideDir ? 0 : 1,
-            transition: 'opacity 0.3s ease',
+            position: 'relative',
+            zIndex: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '72px 32px 16px',
           }}
         >
-          {story.title}
+          <div
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: story.illustration
+                ? 'rgba(255,255,255,0.7)'
+                : theme === 'cream' ? '#76705f' : 'rgba(229,181,116,0.6)',
+              marginBottom: 12,
+            }}
+          >
+            {story.mode === 'parent' ? 'A story for tonight' : 'Your story'}
+          </div>
+          <div
+            style={{
+              fontFamily: "'Newsreader', Georgia, serif",
+              fontSize: 28,
+              fontWeight: 400,
+              lineHeight: 1.2,
+              letterSpacing: '-0.015em',
+              color: story.illustration ? '#ffffff' : theme === 'cream' ? '#1f1b16' : '#e9dfc9',
+              textAlign: 'center',
+              textShadow: story.illustration ? '0 2px 12px rgba(0,0,0,0.5)' : 'none',
+              opacity: slideDir ? 0 : 1,
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            {story.title}
+          </div>
         </div>
       </div>
 

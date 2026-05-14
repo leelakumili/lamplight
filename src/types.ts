@@ -44,6 +44,7 @@ export interface Story {
   generatedAt: number
   mode: 'parent' | 'teen'
   bookmarked?: boolean
+  illustration?: string  // data URI (SVG or image) — persists in IndexedDB
 }
 
 export interface ParentInterview {

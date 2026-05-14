@@ -34,6 +34,41 @@ export function checkSafety(text: string): SafetyResult {
   return { safe: flagged.length === 0, flagged }
 }
 
+// OpenAI Moderation API — used when an OpenAI key is configured.
+// Falls back to wordlist if the API call fails.
+export async function checkSafetyViaAPI(text: string, apiKey: string): Promise<SafetyResult> {
+  const response = await fetch('https://api.openai.com/v1/moderations', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: text }),
+  })
+  if (!response.ok) throw new Error(`Moderation API ${response.status}`)
+  const data = await response.json() as { results: Array<{ flagged: boolean; categories: Record<string, boolean> }> }
+  const result = data.results?.[0]
+  if (!result) throw new Error('Invalid moderation response')
+  if (result.flagged) {
+    const flagged = Object.entries(result.categories).filter(([, v]) => v).map(([k]) => k)
+    return { safe: false, flagged }
+  }
+  return { safe: true, flagged: [] }
+}
+
+// Smart check: use OpenAI Moderation API when available, wordlist otherwise.
+// Claude has no standalone moderation API — wordlist covers it.
+export async function checkSafetySmart(
+  text: string,
+  opts: { useLocal: boolean; provider: string; apiKey: string }
+): Promise<SafetyResult> {
+  if (!opts.useLocal && opts.provider === 'openai' && opts.apiKey) {
+    try {
+      return await checkSafetyViaAPI(text, opts.apiKey)
+    } catch {
+      // API unavailable — fall through to wordlist
+    }
+  }
+  return checkSafety(text)
+}
+
 // Replaces unsafe words with *** and returns whether anything was stripped.
 export function sanitizeInput(text: string): { text: string; wasFlagged: boolean } {
   let out = text

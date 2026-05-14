@@ -83,7 +83,17 @@ function StoryRow({ story, isConfirming, onOpen, onRequestDelete, onConfirmDelet
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 14, backgroundColor: '#f3ead8', border: 'none', cursor: 'pointer', textAlign: 'left' }}
       >
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          <div style={{ width: 38, height: 48, borderRadius: 4, background: 'linear-gradient(160deg, #c9924a, #a35d3a)' }} />
+          <div
+            style={{
+              width: 38,
+              height: 48,
+              borderRadius: 4,
+              background: story.illustration
+                ? `url(${story.illustration}) center/cover`
+                : 'linear-gradient(160deg, #c9924a, #a35d3a)',
+              overflow: 'hidden',
+            }}
+          />
           {story.bookmarked && (
             <div style={{ position: 'absolute', top: -3, right: -3, width: 10, height: 10, borderRadius: '50%', backgroundColor: '#c9924a', border: '1.5px solid #faf4e8' }} />
           )}

@@ -2,6 +2,7 @@ import React, { useReducer, useEffect, useState } from 'react'
 import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
 import { saveSetup, loadSetup, saveStory, loadStories, deleteStory, saveProfiles, loadProfiles, saveActiveProfileId, loadActiveProfileId } from './lib/db'
 import { generateStory } from './lib/generateStory'
+import { generateIllustration } from './lib/illustration'
 import { generateId } from './lib/utils'
 import type { Profile } from './types'
 
@@ -176,6 +177,12 @@ export default function App() {
         onInputSanitized: () => showToast('Some input was removed for safety.', 4000),
       })
 
+      // Generate illustration in parallel with the loading phase (non-blocking if it fails)
+      const illustration = await generateIllustration(
+        { title: result.title, content: result.content, destination: mode === 'parent' ? state.interview.destination : state.selectedTheme || '', id: '', generatedAt: 0, mode },
+        state.setup
+      ).catch(() => null)
+
       const story: Story = {
         id: generateId(),
         title: result.title,
@@ -183,6 +190,7 @@ export default function App() {
         destination: mode === 'parent' ? state.interview.destination : state.selectedTheme || '',
         generatedAt: Date.now(),
         mode,
+        illustration: illustration ?? undefined,
       }
 
       await saveStory(story)

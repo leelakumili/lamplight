@@ -36,7 +36,14 @@ CRAFT — this separates a memorable story from a forgettable one:
 - Dialogue sounds like actual teens: incomplete sentences, subject changes mid-thought, things left unsaid on purpose.
 - 1200–1500 words. Develop each beat fully. Do not rush.
 
-Output format: Story title on line 1. Two blank lines. Then the story. Nothing else.`
+OUTPUT FORMAT — follow exactly, every time:
+Line 1: The story title — 2 to 5 words. A complete, standalone phrase. Never a sentence fragment.
+  GOOD: "The Weight of Afternoon" · "Something Borrowed" · "After Practice" · "What She Kept"
+  BAD:  "The scent of chlorine and" · "She had always been" · "A tangle of"
+Line 2: blank
+Line 3: blank
+Line 4 onward: the story text.
+Output nothing else — no "Here is the story", no explanation, no code fences.`
 
 function buildParentPrompt(setup: Setup, interview: ParentInterview): string {
   const emotionsStr = interview.emotions.length > 0 ? interview.emotions.join(', ') : 'unspecified'
@@ -97,6 +104,44 @@ const IDENTITY_PATTERN = /\b(indian|chinese|japanese|korean|filipino|hispanic|la
 
 function sanitizeSketch(sketch: string): string {
   return sketch.replace(IDENTITY_PATTERN, '').replace(/\s{2,}/g, ' ').trim()
+}
+
+// Words that prove a title is an incomplete sentence fragment.
+const TRAILING_CONNECTOR = /\b(and|or|but|the|a|an|of|in|on|at|to|for|with|by|from|that|which|this|its|their|his|her|our|your|my|as|if|when|where|while|though|although|because|since|until|unless|after|before|between|within|without|over|under|through|across|against|along|around|near|toward|upon|amid|despite|during|per|than|then|via)\s*[,.]?\s*$/i
+
+// Returns false when the title is clearly wrong:
+//   • ends with a connector word (sentence fragment)
+//   • is identical to the opening words of the content (model put the first sentence on line 1)
+function isTitleComplete(title: string, content: string): boolean {
+  if (!title || title.trim().length < 2) return false
+  if (TRAILING_CONNECTOR.test(title.trim())) return false
+  // Check if title is just the start of the story (model ignored the format)
+  const t = title.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 4).join(' ')
+  const c = content.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 6).join(' ')
+  if (t.length > 6 && c.startsWith(t)) return false
+  return true
+}
+
+// Last-resort: ask the model to produce only a title given the opening sentence.
+// Keeps the system prompt minimal so even Gemma reliably returns just the title.
+async function generateTitleOnly(firstSentence: string, setup: Setup): Promise<string> {
+  const system = 'You write short story titles. Reply with ONLY the title — 2 to 5 words, a complete phrase, no punctuation at the end. Nothing else.'
+  const user = `Opening sentence of a teen short story:\n"${firstSentence}"\n\nWrite the title.`
+  try {
+    let raw: string
+    if (setup.useLocal) {
+      raw = await callOllama(setup.ollamaUrl || 'http://localhost:11434', setup.ollamaModel || 'mistral', system, user)
+    } else if (setup.provider === 'claude') {
+      raw = await callClaude(setup.apiKey, system, user)
+    } else {
+      raw = await callOpenAI(setup.apiKey, system, user)
+    }
+    // Strip quotes/asterisks the model sometimes wraps around the title
+    const cleaned = raw.trim().replace(/^["'*]+|["'*]+$/g, '').replace(/^\*+|\*+$/g, '').trim()
+    // Accept if it looks like a real title (not another fragment)
+    if (cleaned && !TRAILING_CONNECTOR.test(cleaned)) return cleaned
+  } catch { /* fall through */ }
+  return 'Tonight\'s Story'
 }
 
 function parseResponse(text: string): { title: string; content: string } {
@@ -240,19 +285,31 @@ export async function generateStory(params: {
 
   const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider, apiKey: setup.apiKey }
 
-  // Generate with up to 2 safety retries
   const MAX_ATTEMPTS = 3
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const rawText = await callProvider()
+
+    // Layer 1: safety
     const { safe } = await checkSafetySmart(rawText, safetyOpts)
-    if (safe) return parseResponse(rawText)
-    // Last attempt failed — surface a clear error
-    if (attempt === MAX_ATTEMPTS - 1) {
-      throw new Error('The story contained content that isn\'t appropriate for this app. Please try again.')
+    if (!safe) {
+      if (attempt === MAX_ATTEMPTS - 1)
+        throw new Error("The story contained content that isn't appropriate for this app. Please try again.")
+      continue
     }
-    // Otherwise loop and regenerate silently
+
+    // Layer 2: title completeness
+    const parsed = parseResponse(rawText)
+    if (!isTitleComplete(parsed.title, parsed.content)) {
+      if (attempt < MAX_ATTEMPTS - 1) continue  // retry full generation
+
+      // All retries exhausted — fix the title with a targeted call rather than failing
+      const firstSentence = parsed.content.split(/(?<=[.!?])\s/)[0].trim()
+      const fixedTitle = await generateTitleOnly(firstSentence, setup)
+      return { ...parsed, title: fixedTitle }
+    }
+
+    return parsed
   }
 
-  // Unreachable, but TypeScript needs it
   throw new Error('Story generation failed.')
 }

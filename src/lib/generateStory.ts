@@ -101,8 +101,22 @@ function sanitizeSketch(sketch: string): string {
 function parseResponse(text: string): { title: string; content: string } {
   const lines = text.trim().split('\n')
   let title = lines[0].trim()
-  // Strip leading "Title:" if present
-  title = title.replace(/^title:\s*/i, '')
+
+  // Strip common model prefixes
+  title = title.replace(/^(title|story title|title:)\s*/i, '').replace(/^\*+|\*+$/g, '').trim()
+
+  // If the "title" is a full sentence (>8 words or >60 chars), the model
+  // used the opening line as a title. Extract a short poetic title from
+  // the first few meaningful words instead and keep the full line in content.
+  const wordCount = title.split(/\s+/).length
+  if (wordCount > 8 || title.length > 60) {
+    // Derive a short title: first 4–5 words, trim trailing punctuation
+    const shortTitle = title.split(/\s+/).slice(0, 5).join(' ').replace(/[,;:.!?]+$/, '')
+    // Put the full opening line back into the content
+    const content = lines.join('\n').trim()
+    return { title: shortTitle, content }
+  }
+
   // Find where actual content starts (skip blank lines after title)
   let contentStart = 1
   while (contentStart < lines.length && lines[contentStart].trim() === '') {

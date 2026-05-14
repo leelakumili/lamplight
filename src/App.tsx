@@ -36,7 +36,7 @@ const initialState: AppState = {
   interview: DEFAULT_INTERVIEW,
   selectedTheme: null,
   currentStory: null,
-  readerFontSize: 16,
+  readerFontSize: 18,
   readerTheme: 'midnight',
   readerFontFamily: 'serif',
   generationError: null,
@@ -152,7 +152,7 @@ export default function App() {
       useLocal: false,
       ollamaUrl: 'http://localhost:11434',
       ollamaModel: 'mistral',
-      defaultFontSize: 16,
+      defaultFontSize: 18,
       defaultTheme: 'midnight',
       defaultFontFamily: 'serif',
       ...state.setup,
@@ -453,7 +453,7 @@ export default function App() {
       <div
         style={{
           width: '100%',
-          maxWidth: 430,
+          maxWidth: 720,
           minHeight: '100dvh',
           position: 'relative',
           backgroundColor: screen === 'loading' || screen === 'after-story' || screen === 'reading' ? '#15182a' : '#faf4e8',

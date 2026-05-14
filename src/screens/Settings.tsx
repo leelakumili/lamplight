@@ -277,7 +277,7 @@ export function Settings({ setup: initialSetup, profiles, activeProfileId, onBac
               onChange={e => update('defaultFontSize', Number(e.target.value))}
               style={{ background: 'none', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#76705f', appearance: 'none', cursor: 'pointer' }}
             >
-              {[14, 16, 18, 20, 22].map(s => (
+              {[16, 18, 20, 22, 24].map(s => (
                 <option key={s} value={s}>{s}px</option>
               ))}
             </select>

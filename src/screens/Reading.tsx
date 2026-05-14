@@ -17,7 +17,7 @@ interface ReadingProps {
   onToggleBookmark: () => void
 }
 
-const FONT_SIZES = [14, 16, 18, 20, 22]
+const FONT_SIZES = [16, 18, 20, 22, 24]
 
 const THEME_COLORS = {
   cream: { bg: '#ffffff', text: '#1f1b16', scene1: '#c8d8e8', scene2: '#e8e0d0', scene3: '#d0c8b0' },
@@ -169,7 +169,7 @@ export function Reading({
           top: 0,
           left: 0,
           right: 0,
-          maxWidth: 430,
+          maxWidth: 720,
           margin: '0 auto',
           padding: '16px 20px',
           display: 'flex',
@@ -290,7 +290,7 @@ export function Reading({
           top: 0,
           left: 0,
           right: 0,
-          maxWidth: 430,
+          maxWidth: 720,
           margin: '0 auto',
           height: '38%',
           display: 'flex',
@@ -339,7 +339,7 @@ export function Reading({
           bottom: 0,
           left: 0,
           right: 0,
-          maxWidth: 430,
+          maxWidth: 720,
           margin: '0 auto',
           height: '65%',
           padding: '0 14px 20px',
@@ -487,7 +487,7 @@ export function Reading({
           <div
             style={{
               width: '100%',
-              maxWidth: 430,
+              maxWidth: 720,
               margin: '0 auto',
               backgroundColor: '#ffffff',
               borderRadius: '22px 22px 0 0',

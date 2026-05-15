@@ -4,6 +4,7 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { setCookie, getCookie } from 'hono/cookie'
 import { timingSafeEqual } from 'crypto'
 import { readFileSync } from 'fs'
+import { hostname } from 'os'
 import { config } from './lib/config'
 import { createSession, destroySession } from './lib/session'
 import { authMiddleware } from './middleware/auth'
@@ -57,9 +58,11 @@ app.get('/*', (c) => c.html(readFileSync('./dist/index.html', 'utf-8')))
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
+  const host = hostname().replace(/\.local$/, '')
   console.log(`\nLamplight running`)
   console.log(`  Local:   http://localhost:${info.port}`)
-  console.log(`  Network: http://<your-hostname>.local:${info.port}\n`)
+  console.log(`  Network: http://${host}.local:${info.port}`)
+  console.log(`\n  Share this with family on your Wi-Fi ^\n`)
 })
 
 // ── Login page (self-contained HTML, no external deps) ───────────────────────

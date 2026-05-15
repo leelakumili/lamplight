@@ -59,6 +59,14 @@ proxy.all('/ollama/*', async (c) => {
     headers: { 'Content-Type': 'application/json' },
     body: method !== 'GET' ? await c.req.text() : undefined,
   })
-  const data = await res.json()
-  return c.json(data, res.status as any)
+  const text = await res.text()
+  // Ollama may return NDJSON (one object per line) even with stream:false.
+  // Parse the last non-empty line which contains the complete response.
+  const lines = text.split('\n').filter(l => l.trim())
+  const last  = lines[lines.length - 1] ?? '{}'
+  try {
+    return c.json(JSON.parse(last), res.status as any)
+  } catch {
+    return c.text(text, res.status as any)
+  }
 })

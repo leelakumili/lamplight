@@ -13,10 +13,11 @@ const PHRASES = [
 ]
 
 interface LoadingProps {
+  useLocal?: boolean
   onTimeout?: () => void
 }
 
-export function Loading({ onTimeout }: LoadingProps) {
+export function Loading({ useLocal = false, onTimeout }: LoadingProps) {
   const [longWait, setLongWait] = useState(false)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -154,7 +155,7 @@ export function Loading({ onTimeout }: LoadingProps) {
           marginTop: 32,
         }}
       >
-        Usually about twenty seconds.
+        {useLocal ? 'Local models take 1–3 minutes.' : 'Usually about twenty seconds.'}
       </p>
     </div>
   )

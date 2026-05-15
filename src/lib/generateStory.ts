@@ -33,10 +33,11 @@ function parseResponse(text: string): { title: string; content: string } {
 
 // ── Provider adapters ─────────────────────────────────────────────────────────
 
-async function callClaude(system: string, user: string): Promise<string> {
+async function callClaude(system: string, user: string, signal?: AbortSignal): Promise<string> {
   const res = await fetch('/api/proxy/anthropic', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
+    signal,
     body: JSON.stringify({
       model: MODELS.claudeSonnet,
       max_tokens: 2500,
@@ -52,10 +53,11 @@ async function callClaude(system: string, user: string): Promise<string> {
   return data.content[0].text
 }
 
-async function callOpenAI(system: string, user: string): Promise<string> {
+async function callOpenAI(system: string, user: string, signal?: AbortSignal): Promise<string> {
   const res = await fetch('/api/proxy/openai/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal,
     body: JSON.stringify({
       model: MODELS.openaiChat,
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
@@ -69,10 +71,11 @@ async function callOpenAI(system: string, user: string): Promise<string> {
   return data.choices[0].message.content
 }
 
-async function callOllama(model: string, system: string, user: string): Promise<string> {
+async function callOllama(model: string, system: string, user: string, signal?: AbortSignal): Promise<string> {
   const res = await fetch('/api/proxy/ollama/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal,
     body: JSON.stringify({
       model,
       stream: false,
@@ -85,12 +88,12 @@ async function callOllama(model: string, system: string, user: string): Promise<
 }
 
 // Single dispatch — used by both generation and title-only fallback.
-function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'ollamaModel'>, system: string, user: string): Promise<string> {
+function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'ollamaModel'>, system: string, user: string, signal?: AbortSignal): Promise<string> {
   if (setup.useLocal)
-    return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user)
+    return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user, signal)
   if (setup.provider === 'claude')
-    return callClaude(system, user)
-  return callOpenAI(system, user)
+    return callClaude(system, user, signal)
+  return callOpenAI(system, user, signal)
 }
 
 // Last-resort title repair — targets only the title without re-generating the story.
@@ -112,9 +115,10 @@ export async function generateStory(params: {
   mode: 'parent' | 'teen'
   interview?: ParentInterview
   theme?: string
+  signal?: AbortSignal
   onInputSanitized?: () => void
 }): Promise<{ title: string; content: string }> {
-  const { setup, mode, theme } = params
+  const { setup, mode, theme, signal } = params
 
   let interview = params.interview
   if (mode === 'parent' && interview) {
@@ -138,7 +142,7 @@ export async function generateStory(params: {
   const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider }
 
   for (let attempt = 0; attempt < 3; attempt++) {
-    const raw = await callLLM(setup, getSystemPrompt(setup.storyStyle || 'modern'), userPrompt)
+    const raw = await callLLM(setup, getSystemPrompt(setup.storyStyle || 'modern'), userPrompt, signal)
 
     const { safe } = await checkSafetySmart(raw, safetyOpts)
     if (!safe) {

@@ -20,6 +20,6 @@ export const OLLAMA_DEFAULT_URL = 'http://localhost:11434'
 
 // Timing constants
 export const ILLUSTRATION_TIMEOUT_MS  = 30_000
-export const GENERATION_LONG_WAIT_MS  = 45_000
-export const GENERATION_TIMEOUT_MS    = 90_000
+export const GENERATION_LONG_WAIT_MS  = 30_000   // show "still going" message after this
+export const GENERATION_TIMEOUT_MS    = 300_000  // 5 min — local models on slow hardware
 export const BOOKMARK_TOAST_MS        = 1_500

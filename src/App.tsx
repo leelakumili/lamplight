@@ -198,9 +198,14 @@ export default function App() {
     }
   }, [state.setup, state.profiles, state.activeProfileId])
 
+  const generationControllerRef = useRef<AbortController | null>(null)
+
   async function startGeneration(mode: 'parent' | 'teen') {
     if (!effectiveSetup) return
     nav('loading')
+
+    const controller = new AbortController()
+    generationControllerRef.current = controller
 
     try {
       const result = await generateStory({
@@ -208,6 +213,7 @@ export default function App() {
         mode,
         interview: mode === 'parent' ? state.interview : undefined,
         theme: mode === 'teen' ? state.selectedTheme || undefined : undefined,
+        signal: controller.signal,
         onInputSanitized: () => showToast('Some input was removed for safety.', 4000),
       })
 
@@ -429,7 +435,10 @@ export default function App() {
       case 'loading':
         return (
           <Loading
+            useLocal={effectiveSetup?.useLocal ?? false}
             onTimeout={() => {
+              generationControllerRef.current?.abort()
+              generationControllerRef.current = null
               showToast('Generation timed out. Please try again.')
               nav('home')
             }}

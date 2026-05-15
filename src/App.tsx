@@ -176,6 +176,7 @@ export default function App() {
       defaultFontSize: 18,
       defaultTheme: 'midnight',
       defaultFontFamily: 'serif',
+      storyStyle: 'modern',
       ...state.setup,
       ...partialSetup,
     }

@@ -225,6 +225,16 @@ export function Settings({ setup: initialSetup, profiles, activeProfileId, appTh
               <option value="openai">GPT-4o</option>
             </select>
           </Row>
+          <Row label="Story style">
+            <select
+              value={setup.storyStyle || 'modern'}
+              onChange={e => update('storyStyle', e.target.value as 'modern' | 'panchatantra')}
+              style={{ background: 'none', border: 'none', fontFamily: "var(--sans)", fontSize: 14, color: 'var(--ink50)', appearance: 'none', cursor: 'pointer' }}
+            >
+              <option value="modern">Modern fiction</option>
+              <option value="panchatantra">Panchatantra fable 🪔</option>
+            </select>
+          </Row>
           <Row label="Use local model">
             <Toggle checked={setup.useLocal} onChange={v => update('useLocal', v)} />
           </Row>

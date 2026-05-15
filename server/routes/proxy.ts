@@ -52,8 +52,9 @@ proxy.post('/openai/moderations', async (c) => {
 })
 
 proxy.all('/ollama/*', async (c) => {
-  const suffix = '/' + c.req.param('*')
+  const suffix = c.req.path.replace(/^\/ollama/, '')
   const method = c.req.method
+  console.log(`[ollama] ${method} ${config.ollamaUrl}${suffix}`)
   const res = await fetch(`${config.ollamaUrl}${suffix}`, {
     method,
     headers: { 'Content-Type': 'application/json' },

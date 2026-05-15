@@ -258,6 +258,10 @@ export default function App() {
       }
     } catch (err) {
       setGenerationProgress(0)
+      if (err instanceof Error && err.message === 'SESSION_EXPIRED') {
+        window.location.href = '/login'
+        return
+      }
       const msg = err instanceof Error ? err.message : 'Something went wrong'
       showToast(`Error: ${msg}`)
       nav('home')

@@ -45,6 +45,7 @@ async function callClaude(system: string, user: string, signal?: AbortSignal): P
       messages: [{ role: 'user', content: user }],
     }),
   })
+  if (res.status === 401) throw new Error('SESSION_EXPIRED')
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
     throw new Error(err.error?.message || `Claude API error: ${res.status}`)
@@ -63,6 +64,7 @@ async function callOpenAI(system: string, user: string, signal?: AbortSignal): P
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   })
+  if (res.status === 401) throw new Error('SESSION_EXPIRED')
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
     throw new Error(err.error?.message || `OpenAI API error: ${res.status}`)
@@ -82,6 +84,7 @@ async function callOllama(model: string, system: string, user: string, signal?: 
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   })
+  if (res.status === 401) throw new Error('SESSION_EXPIRED')
   if (!res.ok) throw new Error(`Ollama error: ${res.status} — check that the model name matches 'ollama list' exactly`)
   const data = await res.json() as { message: { content: string } }
   return data.message.content
@@ -105,6 +108,7 @@ async function callOllamaStreaming(
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   })
+  if (res.status === 401) throw new Error('SESSION_EXPIRED')
   if (!res.ok) throw new Error(`Ollama error: ${res.status} — check that the model name matches 'ollama list' exactly`)
   if (!res.body) throw new Error('No response body from Ollama')
 

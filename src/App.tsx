@@ -116,6 +116,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false)
   const [dbError, setDbError] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [generationProgress, setGenerationProgress] = useState(0)
   const [appTheme, setAppTheme] = useState<AppTheme>(getStoredTheme)
   // Tracks live story IDs so background illustration tasks can bail if a story was deleted.
   const historyIdsRef = useRef<Set<string>>(new Set())
@@ -203,6 +204,7 @@ export default function App() {
   async function startGeneration(mode: 'parent' | 'teen') {
     if (!effectiveSetup) return
     nav('loading')
+    setGenerationProgress(0)
 
     const controller = new AbortController()
     generationControllerRef.current = controller
@@ -215,6 +217,7 @@ export default function App() {
         theme: mode === 'teen' ? state.selectedTheme || undefined : undefined,
         signal: controller.signal,
         onInputSanitized: () => showToast('Some input was removed for safety.', 4000),
+        onProgress: effectiveSetup.useLocal ? setGenerationProgress : undefined,
       })
 
       const story: Story = {
@@ -230,6 +233,7 @@ export default function App() {
       dispatch({ type: 'ADD_STORY', story })
       dispatch({ type: 'SET_CURRENT_STORY', story })
 
+      setGenerationProgress(0)
       if (mode === 'parent') dispatch({ type: 'CLEAR_INTERVIEW' })
       nav('reading')
 
@@ -253,6 +257,7 @@ export default function App() {
           })
       }
     } catch (err) {
+      setGenerationProgress(0)
       const msg = err instanceof Error ? err.message : 'Something went wrong'
       showToast(`Error: ${msg}`)
       nav('home')
@@ -436,6 +441,7 @@ export default function App() {
         return (
           <Loading
             useLocal={effectiveSetup?.useLocal ?? false}
+            progress={generationProgress}
             onTimeout={() => {
               generationControllerRef.current?.abort()
               generationControllerRef.current = null

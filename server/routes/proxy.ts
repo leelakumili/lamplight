@@ -54,12 +54,27 @@ proxy.post('/openai/moderations', async (c) => {
 proxy.all('/ollama/*', async (c) => {
   const suffix = c.req.path.replace(/^\/api\/proxy\/ollama/, '')
   const method = c.req.method
-  console.log(`[ollama] ${method} ${config.ollamaUrl}${suffix}`)
+  const bodyText = method !== 'GET' ? await c.req.text() : undefined
+
+  let isStreaming = false
+  if (bodyText) {
+    try { isStreaming = (JSON.parse(bodyText) as { stream?: boolean }).stream === true } catch { /* ignore */ }
+  }
+
+  console.log(`[ollama] ${method} ${config.ollamaUrl}${suffix} stream=${isStreaming}`)
   const res = await fetch(`${config.ollamaUrl}${suffix}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
-    body: method !== 'GET' ? await c.req.text() : undefined,
+    body: bodyText,
   })
+
+  if (isStreaming && res.body) {
+    return new Response(res.body, {
+      status: res.status,
+      headers: { 'Content-Type': 'application/x-ndjson' },
+    })
+  }
+
   const text = await res.text()
   // Ollama may return NDJSON (one object per line) even with stream:false.
   // Parse the last non-empty line which contains the complete response.

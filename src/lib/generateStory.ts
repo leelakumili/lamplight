@@ -87,10 +87,68 @@ async function callOllama(model: string, system: string, user: string, signal?: 
   return data.message.content
 }
 
+async function callOllamaStreaming(
+  model: string,
+  system: string,
+  user: string,
+  onProgress: (ratio: number) => void,
+  signal?: AbortSignal,
+  targetWords = 1200,
+): Promise<string> {
+  const res = await fetch('/api/proxy/ollama/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal,
+    body: JSON.stringify({
+      model,
+      stream: true,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+    }),
+  })
+  if (!res.ok) throw new Error(`Ollama error: ${res.status} — check that the model name matches 'ollama list' exactly`)
+  if (!res.body) throw new Error('No response body from Ollama')
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let accumulated = ''
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+    for (const line of lines) {
+      if (!line.trim()) continue
+      try {
+        const chunk = JSON.parse(line) as { message?: { content: string }; done?: boolean }
+        if (chunk.message?.content) {
+          accumulated += chunk.message.content
+          const words = accumulated.split(/\s+/).filter(Boolean).length
+          onProgress(Math.min(words / targetWords, 0.99))
+        }
+        if (chunk.done) { onProgress(1); return accumulated }
+      } catch { /* ignore malformed chunk */ }
+    }
+  }
+  return accumulated
+}
+
 // Single dispatch — used by both generation and title-only fallback.
-function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'ollamaModel'>, system: string, user: string, signal?: AbortSignal): Promise<string> {
-  if (setup.useLocal)
+function callLLM(
+  setup: Pick<Setup, 'useLocal' | 'provider' | 'ollamaModel'>,
+  system: string,
+  user: string,
+  signal?: AbortSignal,
+  onProgress?: (ratio: number) => void,
+  targetWords?: number,
+): Promise<string> {
+  if (setup.useLocal) {
+    if (onProgress)
+      return callOllamaStreaming(setup.ollamaModel || MODELS.ollamaDefault, system, user, onProgress, signal, targetWords)
     return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user, signal)
+  }
   if (setup.provider === 'claude')
     return callClaude(system, user, signal)
   return callOpenAI(system, user, signal)
@@ -117,6 +175,7 @@ export async function generateStory(params: {
   theme?: string
   signal?: AbortSignal
   onInputSanitized?: () => void
+  onProgress?: (ratio: number) => void
 }): Promise<{ title: string; content: string }> {
   const { setup, mode, theme, signal } = params
 
@@ -141,8 +200,13 @@ export async function generateStory(params: {
 
   const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider }
 
+  const targetWords = setup.storyStyle === 'panchatantra' ? 900 : 1200
+
   for (let attempt = 0; attempt < 3; attempt++) {
-    const raw = await callLLM(setup, getSystemPrompt(setup.storyStyle || 'modern'), userPrompt, signal)
+    const progressFn = params.onProgress
+      ? (r: number) => params.onProgress!(attempt === 0 ? r : r * 0.9 + 0.05)
+      : undefined
+    const raw = await callLLM(setup, getSystemPrompt(setup.storyStyle || 'modern'), userPrompt, signal, progressFn, targetWords)
 
     const { safe } = await checkSafetySmart(raw, safetyOpts)
     if (!safe) {

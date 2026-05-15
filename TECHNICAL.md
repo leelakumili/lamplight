@@ -4,92 +4,92 @@
 
 Lamplight is a React SPA served by a Hono server. The server does three things: PIN auth, AI proxy (injecting credentials), and static file serving. **The browser never holds an API key.**
 
-```
-╔══════════════════════════════════════════════════════════════╗
-║                    HOME NETWORK                              ║
-║                                                              ║
-║   📱 Her phone          💻 Your laptop (port 3000)           ║
-║   ┌─────────────┐       ┌──────────────────────────────┐    ║
-║   │             │  WiFi │                              │    ║
-║   │   Browser   │──────▶│  🟠 Hono Server              │    ║
-║   │             │       │                              │    ║
-║   │  React SPA  │       │  /login    → PIN screen      │    ║
-║   │             │       │  /logout   → clear session   │    ║
-║   │  IndexedDB  │       │  /health   → { ok: true }    │    ║
-║   │  (stories)  │       │  /api/proxy/* → AI calls     │    ║
-║   │             │       │  /*        → serve dist/     │    ║
-║   └─────────────┘       └──────────┬───────────────────┘    ║
-║                                    │                         ║
-╚════════════════════════════════════│═════════════════════════╝
-                                     │ internet
-                         ┌───────────┼───────────┐
-                         ▼           ▼           ▼
-                    🟣 Anthropic  🟢 OpenAI  🔵 Ollama
-                    Claude API   GPT-4o     (local)
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "tertiaryColor": "#2e2218", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "clusterBkg": "#2e2218", "titleColor": "#e9dfc9", "edgeLabelBackground": "#2a201a", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+graph LR
+    A["📱 Her phone\nBrowser / React SPA"] -->|WiFi| B["💻 Your laptop :3000\nHono Server"]
+    B --> C["🟣 Anthropic\nClaude API"]
+    B --> D["🟢 OpenAI\nGPT-4o"]
+    B --> E["🔵 Ollama\nLocal model"]
+    B -->|"IndexedDB\nstories"| A
+
+    style A fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style B fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style C fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style D fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style E fill:#2a201a,stroke:#7c5c38,color:#c9a96e
 ```
 
 ---
 
 ## Request flow
 
-```
-Browser                    Hono Server                   AI Provider
-  │                             │                              │
-  │── POST /api/proxy/ollama ──▶│                              │
-  │   { model, messages }       │── POST /api/chat ───────────▶│
-  │                             │   + Authorization header     │
-  │                             │◀── NDJSON stream ────────────│
-  │                             │   (parsed, last line taken)  │
-  │◀── JSON response ───────────│                              │
-  │                             │                              │
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+sequenceDiagram
+    participant B as Browser
+    participant H as Hono Server
+    participant O as Ollama / AI
+
+    B->>H: POST /api/proxy/ollama { model, messages }
+    H->>O: POST /api/chat + stream:true
+    O-->>H: NDJSON token stream
+    H-->>B: stream pass-through
+    Note over B: onProgress counts words,<br/>updates ring (0 → 100%)
 ```
 
 ---
 
 ## Authentication
 
-```
- User visits app
-        │
-        ▼
- ┌─────────────────┐     No session     ┌──────────────────┐
- │  Auth Middleware │───────────────────▶│   /login page    │
- └─────────────────┘                    │   (PIN prompt)   │
-        │ Valid session cookie           └────────┬─────────┘
-        │                                        │ POST /login
-        ▼                                        ▼
- ┌─────────────────┐              ┌──────────────────────────┐
- │   App serves    │◀─────────────│  timingSafeEqual(pin)    │
- │   normally      │  Set cookie  │  randomBytes(32) token   │
- └─────────────────┘              │  stored in memory Set    │
-                                  └──────────────────────────┘
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+flowchart TD
+    A[User visits app] --> B{Valid session\ncookie?}
+    B -->|No| C["/login\nPIN prompt"]
+    B -->|Yes| D[App served normally]
+    C -->|POST /login| E["timingSafeEqual(pin)\nrandomBytes(32) token"]
+    E --> F[Set httpOnly cookie\nSameSite=Lax]
+    F --> D
+
+    style A fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style B fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style C fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style D fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style E fill:#3a2c1e,stroke:#7c5c38,color:#c9a96e
+    style F fill:#2a201a,stroke:#7c5c38,color:#c9a96e
 ```
 
-- Cookie: `lamplight_session`, `httpOnly`, `SameSite=Lax`, 1-year max-age
-- Sessions live in memory — cleared on server restart (intentional, home network)
-- API requests without session → `401`; browser requests → redirect to `/login`
+**Cookie:** `lamplight_session`, `httpOnly`, `SameSite=Lax`, 1-year max-age  
+Sessions live in memory — cleared on server restart (intentional, home network)  
+API requests without session → `401`; browser requests → redirect to `/login`
 
 ---
 
 ## AI Proxy endpoints
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    /api/proxy/*                                 │
-├──────────────────────────┬──────────────────────────────────────┤
-│ POST /anthropic          │ → api.anthropic.com/v1/messages      │
-│                          │   + x-api-key header                 │
-├──────────────────────────┼──────────────────────────────────────┤
-│ POST /openai/chat        │ → api.openai.com/v1/chat/completions │
-│                          │   + Authorization: Bearer ...        │
-├──────────────────────────┼──────────────────────────────────────┤
-│ POST /openai/images      │ → api.openai.com/v1/images/...       │
-├──────────────────────────┼──────────────────────────────────────┤
-│ POST /openai/moderations │ → api.openai.com/v1/moderations      │
-├──────────────────────────┼──────────────────────────────────────┤
-│ ALL  /ollama/*           │ → $OLLAMA_BASE_URL + path            │
-│                          │   NDJSON → parsed → last line        │
-└──────────────────────────┴──────────────────────────────────────┘
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+graph LR
+    subgraph proxy["  /api/proxy/*  "]
+        A["POST /anthropic"] --> B["api.anthropic.com\n/v1/messages"]
+        C["POST /openai/chat"] --> D["api.openai.com\n/v1/chat/completions"]
+        E["POST /openai/images"] --> F["api.openai.com\n/v1/images/..."]
+        G["POST /openai/moderations"] --> H["api.openai.com\n/v1/moderations"]
+        I["ALL /ollama/*"] --> J["$OLLAMA_BASE_URL\n+ path suffix"]
+    end
+
+    style proxy fill:#2e2218,stroke:#c9a96e,color:#e9dfc9
+    style A fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style B fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style C fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style D fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style E fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style F fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style G fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style H fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style I fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style J fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
 ```
 
 Missing key → `503` (not a key leak). Client sends only the request body.
@@ -98,141 +98,172 @@ Missing key → `503` (not a key leak). Client sends only the request body.
 
 ## Story generation pipeline
 
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+flowchart TD
+    A["Parent fills interview"] --> C
+    B["Teen picks theme"] --> C
+    C["Build prompt\nprompt.ts"] --> D
+    D["Call LLM\n/api/proxy/*\nup to 3 attempts"] --> E
+    E{"Safety\ncheck"} -->|unsafe| D
+    E -->|safe| F{"Title\nvalid?"}
+    F -->|bad, attempt < 3| D
+    F -->|bad, 3 attempts exhausted| G["Title repair\nfirst sentence only\n→ 2–5 word title"]
+    F -->|good| H["✓ Story ready"]
+    G --> H
+
+    style A fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style B fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style C fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style D fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style E fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style F fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style G fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style H fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
 ```
-  Parent fills interview          Teen picks theme
-         │                               │
-         └──────────────┬────────────────┘
-                        ▼
-              ┌─────────────────┐
-              │  Build prompt   │  ← profile + answers/theme
-              │  (prompt.ts)    │
-              └────────┬────────┘
-                       │
-              ┌────────▼────────┐
-         ┌───▶│   Call LLM      │  up to 3 attempts
-         │    │  /api/proxy/*   │
-         │    └────────┬────────┘
-         │             │
-         │    ┌────────▼────────┐
-         │    │  Safety check   │  OpenAI moderation (cloud)
-         │    │  (safety.ts)    │  word-list heuristic (local)
-         │    └────────┬────────┘
-         │             │ unsafe → retry
-         │    ┌────────▼────────┐
-         │    │  Parse response │  title + content
-         │    │  Title valid?   │
-         │    └────────┬────────┘
-         └─────────────┘ bad title → retry
-                       │ 3 attempts exhausted + bad title
-                       ▼
-              ┌─────────────────┐
-              │  Title repair   │  send only first sentence
-              │  (fallback)     │  ask for 2–5 word title
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  Story ready ✓  │
-              └─────────────────┘
+
+---
+
+## Streaming progress (Ollama)
+
+When `useLocal` is true, story generation uses `stream: true` so the Loading screen can show real progress.
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+sequenceDiagram
+    participant C as Client
+    participant P as Proxy
+    participant O as Ollama
+
+    C->>P: POST /api/proxy/ollama { stream:true }
+    P->>O: POST /api/chat { stream:true }
+    loop NDJSON token chunks
+        O-->>P: { message: { content: "..." } }
+        P-->>C: chunk passed through
+        Note over C: count words / targetWords<br/>→ onProgress(ratio)<br/>→ ring fills
+    end
+    O-->>P: { done: true }
+    P-->>C: final chunk
+    Note over C: ring reaches 100%
 ```
 
 ---
 
 ## Illustration pipeline
 
-```
-  Story appears on screen
-         │
-         │  (non-blocking — user reads immediately)
-         │
-         ▼
-  ┌──────────────────────────────┐
-  │  Background task starts      │
-  │  AbortController (30s limit) │
-  └──────────┬───────────────────┘
-             │
-      ┌──────┴──────┐
-      │             │
-  Claude?       OpenAI?
-      │             │
-      ▼             ▼
-  SVG prompt   DALL-E image
-  → inline SVG  → data URL
-      │             │
-      └──────┬──────┘
-             │
-      ┌──────▼──────────────────┐
-      │  historyIdsRef guard    │  story still exists?
-      │  (not deleted mid-gen)  │
-      └──────┬──────────────────┘
-             │ yes
-             ▼
-      ┌──────────────┐
-      │  Save to     │
-      │  IndexedDB   │
-      │  → appears   │
-      └──────────────┘
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+flowchart TD
+    A["Story appears on screen\n(user reads immediately)"] --> B
+    B["Background task\nAbortController 30s"] --> C{Provider?}
+    C -->|Claude| D["SVG prompt\n→ inline SVG"]
+    C -->|OpenAI| E["DALL-E prompt\n→ data URL"]
+    D --> F
+    E --> F{"Story still\nexists?"}
+    F -->|deleted mid-gen| G["Discard"]
+    F -->|yes| H["Save to IndexedDB\n→ appears in reader"]
+
+    style A fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style B fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style C fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style D fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style E fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style F fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style G fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style H fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
 ```
 
 ---
 
 ## Client state machine
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   AppState (useReducer)                  │
-│                                                         │
-│  screen ──────────────────────────────────────────────┐ │
-│  (onb-welcome → onb-profile → onb-llm → home → ...)  │ │
-│                                                       │ │
-│  setup ─────── name, provider, ollamaModel, themes    │ │
-│  interview ──── Q1–Q4 answers (cleared after story)   │ │
-│  history ─────── Story[]  ◀──▶  IndexedDB             │ │
-│  profiles ────── Profile[] ◀──▶  IndexedDB            │ │
-│  currentStory ── Story being read                     │ │
-│                                                       │ │
-│  Reducer default: never  (exhaustiveness enforced) ◀──┘ │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+stateDiagram-v2
+    [*] --> onb-welcome
+    onb-welcome --> onb-profile
+    onb-profile --> onb-llm
+    onb-llm --> home
+    home --> parent-q1
+    home --> teen-themes
+    home --> settings
+    parent-q1 --> parent-q2
+    parent-q2 --> parent-q3
+    parent-q3 --> parent-q4
+    parent-q4 --> loading
+    teen-themes --> loading
+    loading --> reading
+    reading --> after-story
+    after-story --> home
+    after-story --> loading
+    settings --> home
 ```
 
-Screens are a string union (`Screen` type). No router library — the `screen` key drives a `switch` in `App.tsx`.
+State is a string union (`Screen` type). No router library — the `screen` key drives a `switch` in `App.tsx`.
 
 ---
 
 ## Theming system
 
-```
-  App themes (4)              Reader themes (3)
-  ──────────────              ─────────────────
-  cream     🟤 warm           cream   ☀️ light parchment
-  sepia     🟫 editorial      sepia   🌙 dark warm
-  midnight  ⬛ dark           midnight ⬛ pure dark
-  editorial 📰 structured
-       │                            │
-       ▼                            ▼
-  [data-theme="..."]        --reader-sepia-bg
-  on <html>                 --reader-sepia-bg2
-       │                    etc. (CSS vars)
-       ▼
-  var(--bg), var(--ink)     Applied independently
-  var(--accent), etc.       so reader ≠ app theme
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+graph TD
+    subgraph app["App themes (4)"]
+        A1[cream — warm parchment]
+        A2[sepia — editorial brown]
+        A3[midnight — deep dark]
+        A4[editorial — structured]
+    end
+    subgraph reader["Reader themes (3)"]
+        R1[cream — light]
+        R2[sepia — dark warm]
+        R3[midnight — pure dark]
+    end
+    app --> AT["data-theme on html\n→ var(--bg), var(--ink)\nvar(--accent), etc."]
+    reader --> RT["CSS vars scoped to\n.reader element\nApplied independently"]
+
+    style app fill:#2e2218,stroke:#c9a96e,color:#e9dfc9
+    style reader fill:#2e2218,stroke:#7c5c38,color:#c9a96e
+    style AT fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style RT fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style A1 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style A2 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style A3 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style A4 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style R1 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style R2 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style R3 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
 ```
 
 ---
 
 ## Dev vs production
 
-```
-  DEVELOPMENT (npm run dev)          PRODUCTION (npm start)
-  ─────────────────────────          ──────────────────────
-  Vite  :5173  ──┐                   Hono :3000
-  Hono  :3000  ◀─┘ proxy            ├── serves dist/
-                                     ├── /api/proxy/*
-  Vite proxies:                      └── PIN auth
-  /api    → :3000
-  /login  → :3000                   Access:
-  /logout → :3000                   localhost:3000     (you)
-  /health → :3000                   lamplight.local:3000 (family)
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+graph LR
+    subgraph dev["npm run dev"]
+        V["Vite :5173"] -->|proxy /api, /login| HH["Hono :3000"]
+    end
+    subgraph prod["npm start"]
+        HP["Hono :3000"]
+        HP --- S1["serves dist/"]
+        HP --- S2["/api/proxy/*"]
+        HP --- S3["PIN auth"]
+    end
+    prod --> L1["localhost:3000\n(you)"]
+    prod --> L2["lamplight.local:3000\n(family on WiFi)"]
+
+    style dev fill:#2e2218,stroke:#c9a96e,color:#e9dfc9
+    style prod fill:#2e2218,stroke:#7c5c38,color:#c9a96e
+    style V fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style HH fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style HP fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style S1 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style S2 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style S3 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style L1 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style L2 fill:#2a201a,stroke:#7c5c38,color:#c9a96e
 ```
 
 ---

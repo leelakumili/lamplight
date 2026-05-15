@@ -15,9 +15,10 @@ const PHRASES = [
 interface LoadingProps {
   useLocal?: boolean
   onTimeout?: () => void
+  progress?: number
 }
 
-export function Loading({ useLocal = false, onTimeout }: LoadingProps) {
+export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingProps) {
   const [longWait, setLongWait] = useState(false)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -61,7 +62,7 @@ export function Loading({ useLocal = false, onTimeout }: LoadingProps) {
         animation: 'st-fade-in 0.4s ease both',
       }}
     >
-      {/* Breathing orb */}
+      {/* Breathing orb with optional progress ring */}
       <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 48 }}>
         <div
           style={{
@@ -83,6 +84,33 @@ export function Loading({ useLocal = false, onTimeout }: LoadingProps) {
             boxShadow: '0 0 40px color-mix(in srgb, var(--accent) 53%, transparent)',
           }}
         />
+        {useLocal && (
+          <svg
+            style={{
+              position: 'absolute',
+              top: -10,
+              left: -10,
+              width: 140,
+              height: 140,
+              transform: 'rotate(-90deg)',
+              overflow: 'visible',
+              pointerEvents: 'none',
+            }}
+            viewBox="0 0 140 140"
+          >
+            <circle cx="70" cy="70" r="66" fill="none" stroke="rgba(233,223,201,0.12)" strokeWidth="3" />
+            <circle
+              cx="70" cy="70" r="66"
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 66}`}
+              strokeDashoffset={`${2 * Math.PI * 66 * (1 - progress)}`}
+              style={{ transition: 'stroke-dashoffset 1.2s ease', opacity: progress > 0 ? 1 : 0 }}
+            />
+          </svg>
+        )}
       </div>
 
       {/* Kicker */}
@@ -155,7 +183,11 @@ export function Loading({ useLocal = false, onTimeout }: LoadingProps) {
           marginTop: 32,
         }}
       >
-        {useLocal ? 'Local models take 1–3 minutes.' : 'Usually about twenty seconds.'}
+        {useLocal && progress > 0
+          ? `${Math.round(progress * 100)}% written`
+          : useLocal
+            ? 'Local models take 1–3 minutes.'
+            : 'Usually about twenty seconds.'}
       </p>
     </div>
   )

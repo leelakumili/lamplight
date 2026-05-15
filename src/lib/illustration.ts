@@ -1,5 +1,5 @@
 import type { Story, Setup } from '../types'
-import { MODELS, ANTHROPIC_VERSION } from './constants'
+import { MODELS } from './constants'
 
 function safeDestination(raw: string): string {
   return raw.replace(/[^a-zA-Z\s]/g, '').trim().slice(0, 40)
@@ -37,10 +37,10 @@ async function urlToDataURI(url: string): Promise<string> {
   })
 }
 
-async function generateWithDallE(story: Story, apiKey: string, signal: AbortSignal): Promise<string | null> {
-  const res = await fetch('https://api.openai.com/v1/images/generations', {
+async function generateWithDallE(story: Story, signal: AbortSignal): Promise<string | null> {
+  const res = await fetch('/api/proxy/openai/images', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: MODELS.openaiImage, prompt: buildDallEPrompt(story), n: 1, size: '1024x1024', quality: 'standard' }),
     signal,
   })
@@ -51,15 +51,10 @@ async function generateWithDallE(story: Story, apiKey: string, signal: AbortSign
   return urlToDataURI(url)
 }
 
-async function generateWithClaudeSVG(story: Story, apiKey: string, signal: AbortSignal): Promise<string | null> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+async function generateWithClaudeSVG(story: Story, signal: AbortSignal): Promise<string | null> {
+  const res = await fetch('/api/proxy/anthropic', {
     method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-      'content-type': 'application/json',
-      'anthropic-dangerous-direct-browser-calls': 'true',
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       model: MODELS.claudeHaiku,
       max_tokens: 1024,
@@ -77,7 +72,7 @@ async function generateWithClaudeSVG(story: Story, apiKey: string, signal: Abort
 
 export async function generateIllustration(story: Story, setup: Setup, signal: AbortSignal): Promise<string | null> {
   if (setup.useLocal) return null
-  if (setup.provider === 'openai' && setup.apiKey) return generateWithDallE(story, setup.apiKey, signal)
-  if (setup.provider === 'claude' && setup.apiKey) return generateWithClaudeSVG(story, setup.apiKey, signal)
+  if (setup.provider === 'openai') return generateWithDallE(story, signal)
+  if (setup.provider === 'claude') return generateWithClaudeSVG(story, signal)
   return null
 }

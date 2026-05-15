@@ -1,7 +1,7 @@
 import type { Setup, ParentInterview } from '../types'
 import { sanitizeInput, checkSafetySmart } from './safety'
 import { SYSTEM_PROMPT, buildParentPrompt, buildTeenPrompt } from './prompt'
-import { MODELS, ANTHROPIC_VERSION, OLLAMA_DEFAULT_URL } from './constants'
+import { MODELS } from './constants'
 
 // Words that prove a title is an incomplete sentence fragment.
 const TRAILING_CONNECTOR = /\b(and|or|but|the|a|an|of|in|on|at|to|for|with|by|from|that|which|this|its|their|his|her|our|your|my|as|if|when|where|while|though|although|because|since|until|unless|after|before|between|within|without|over|under|through|across|against|along|around|near|toward|upon|amid|despite|during|per|than|then|via)\s*[,.]?\s*$/i
@@ -33,15 +33,10 @@ function parseResponse(text: string): { title: string; content: string } {
 
 // ── Provider adapters ─────────────────────────────────────────────────────────
 
-async function callClaude(apiKey: string, system: string, user: string): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+async function callClaude(system: string, user: string): Promise<string> {
+  const res = await fetch('/api/proxy/anthropic', {
     method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-      'content-type': 'application/json',
-      'anthropic-dangerous-direct-browser-calls': 'true',
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       model: MODELS.claudeSonnet,
       max_tokens: 2500,
@@ -57,10 +52,10 @@ async function callClaude(apiKey: string, system: string, user: string): Promise
   return data.content[0].text
 }
 
-async function callOpenAI(apiKey: string, system: string, user: string): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callOpenAI(system: string, user: string): Promise<string> {
+  const res = await fetch('/api/proxy/openai/chat', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: MODELS.openaiChat,
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
@@ -74,8 +69,8 @@ async function callOpenAI(apiKey: string, system: string, user: string): Promise
   return data.choices[0].message.content
 }
 
-async function callOllama(url: string, model: string, system: string, user: string): Promise<string> {
-  const res = await fetch(url.replace(/\/$/, '') + '/api/chat', {
+async function callOllama(model: string, system: string, user: string): Promise<string> {
+  const res = await fetch('/api/proxy/ollama/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -90,12 +85,12 @@ async function callOllama(url: string, model: string, system: string, user: stri
 }
 
 // Single dispatch — used by both generation and title-only fallback.
-function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'apiKey' | 'ollamaUrl' | 'ollamaModel'>, system: string, user: string): Promise<string> {
+function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'ollamaModel'>, system: string, user: string): Promise<string> {
   if (setup.useLocal)
-    return callOllama(setup.ollamaUrl || OLLAMA_DEFAULT_URL, setup.ollamaModel || MODELS.ollamaDefault, system, user)
+    return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user)
   if (setup.provider === 'claude')
-    return callClaude(setup.apiKey, system, user)
-  return callOpenAI(setup.apiKey, system, user)
+    return callClaude(system, user)
+  return callOpenAI(system, user)
 }
 
 // Last-resort title repair — targets only the title without re-generating the story.
@@ -140,7 +135,7 @@ export async function generateStory(params: {
     ? buildParentPrompt(setup, interview)
     : buildTeenPrompt(setup, theme || 'Just somewhere else')
 
-  const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider, apiKey: setup.apiKey }
+  const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider }
 
   for (let attempt = 0; attempt < 3; attempt++) {
     const raw = await callLLM(setup, SYSTEM_PROMPT, userPrompt)

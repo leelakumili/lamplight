@@ -12,22 +12,12 @@ interface OnbLLMProps {
 export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
   const [mode, setMode] = useState<'cloud' | 'local'>('cloud')
   const [provider, setProvider] = useState<'claude' | 'openai'>('claude')
-  const [apiKey, setApiKey] = useState('')
-  const [showKey, setShowKey] = useState(false)
-  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
   const [ollamaModel, setOllamaModel] = useState('mistral')
-  const [apiKeyError, setApiKeyError] = useState('')
 
   function handleFinish() {
-    if (mode === 'cloud' && !apiKey.trim()) {
-      setApiKeyError('Please enter your API key.')
-      return
-    }
     onFinish({
       provider,
-      apiKey: apiKey.trim(),
       useLocal: mode === 'local',
-      ollamaUrl: ollamaUrl.trim() || 'http://localhost:11434',
       ollamaModel: ollamaModel.trim() || 'mistral',
     })
   }
@@ -149,98 +139,10 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
                 <option value="openai">OpenAI · GPT-4o</option>
               </select>
             </div>
-
-            {/* API Key */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: "var(--sans)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--ink50)',
-                  marginBottom: 8,
-                }}
-              >
-                API Key
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={apiKey}
-                  onChange={e => { setApiKey(e.target.value); setApiKeyError('') }}
-                  placeholder={provider === 'claude' ? 'sk-ant-…' : 'sk-…'}
-                  style={{
-                    width: '100%',
-                    padding: '12px 44px 12px 14px',
-                    borderRadius: 12,
-                    border: `1px solid ${apiKeyError ? 'var(--accent2)' : 'var(--ink15)'}`,
-                    backgroundColor: 'var(--bg2)',
-                    fontFamily: "var(--sans)",
-                    fontSize: 15,
-                    color: 'var(--ink)',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(v => !v)}
-                  style={{
-                    position: 'absolute',
-                    right: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--ink50)',
-                    padding: 4,
-                  }}
-                >
-                  <Icon name={showKey ? 'eye-off' : 'eye'} size={18} color="var(--ink50)" />
-                </button>
-              </div>
-              {apiKeyError && (
-                <div style={{ marginTop: 4, fontSize: 12, color: 'var(--accent2)', fontFamily: "var(--sans)" }}>
-                  {apiKeyError}
-                </div>
-              )}
-            </div>
           </div>
         ) : (
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontFamily: "var(--sans)",
-                fontSize: 12,
-                fontWeight: 500,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                color: 'var(--ink50)',
-                marginBottom: 8,
-              }}
-            >
-              Ollama URL
-            </label>
-            <input
-              type="text"
-              value={ollamaUrl}
-              onChange={e => setOllamaUrl(e.target.value)}
-              placeholder="http://localhost:11434"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: 12,
-                border: '1px solid var(--ink15)',
-                backgroundColor: 'var(--bg2)',
-                fontFamily: "var(--sans)",
-                fontSize: 15,
-                color: 'var(--ink)',
-              }}
-            />
-            <div style={{ marginTop: 18 }}>
+            <div style={{ marginTop: 0 }}>
               <label
                 style={{
                   display: 'block',
@@ -299,7 +201,7 @@ export function OnbLLM({ onBack, onFinish }: OnbLLMProps) {
               color: 'var(--ink70)',
             }}
           >
-            Your API key and all story data stays on this device. Stories are generated through the provider's API and never stored anywhere else.
+            Stories are generated through the app server on this network. Your data never leaves your home.
           </p>
         </div>
 

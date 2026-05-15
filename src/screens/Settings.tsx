@@ -21,7 +21,6 @@ export function Settings({ setup: initialSetup, profiles, activeProfileId, appTh
   const [editingSketch, setEditingSketch] = useState(false)
   const [addingFriend, setAddingFriend] = useState(false)
   const [friendInput, setFriendInput] = useState('')
-  const [showKey, setShowKey] = useState(false)
   const [addingProfile, setAddingProfile] = useState(false)
   const [newProfileName, setNewProfileName] = useState('')
 
@@ -226,35 +225,11 @@ export function Settings({ setup: initialSetup, profiles, activeProfileId, appTh
               <option value="openai">GPT-4o</option>
             </select>
           </Row>
-          <Row label="API Key">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
-              <input
-                type={showKey ? 'text' : 'password'}
-                value={setup.apiKey}
-                onChange={e => update('apiKey', e.target.value)}
-                placeholder="Not set"
-                style={{ background: 'none', border: 'none', fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink50)', textAlign: 'right', maxWidth: 150 }}
-              />
-              <button onClick={() => setShowKey(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                <Icon name={showKey ? 'eye-off' : 'eye'} size={16} color="var(--ink50)" />
-              </button>
-            </div>
-          </Row>
           <Row label="Use local model">
             <Toggle checked={setup.useLocal} onChange={v => update('useLocal', v)} />
           </Row>
           {setup.useLocal && (
             <div style={{ padding: '4px 16px 14px' }}>
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontFamily: "var(--sans)", fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink50)', marginBottom: 6 }}>Ollama URL</div>
-                <input
-                  type="text"
-                  value={setup.ollamaUrl}
-                  onChange={e => update('ollamaUrl', e.target.value)}
-                  placeholder="http://localhost:11434"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--ink15)', backgroundColor: 'var(--bg)', fontFamily: "var(--sans)", fontSize: 14, color: 'var(--ink)', boxSizing: 'border-box' }}
-                />
-              </div>
               <div>
                 <div style={{ fontFamily: "var(--sans)", fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink50)', marginBottom: 6 }}>Model name</div>
                 <input

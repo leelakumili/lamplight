@@ -27,9 +27,7 @@ export interface Setup {
   friends: string[]
   characterSketch: string
   provider: 'claude' | 'openai'
-  apiKey: string
   useLocal: boolean
-  ollamaUrl: string
   ollamaModel: string
   defaultFontSize: number
   defaultTheme: 'cream' | 'sepia' | 'midnight'

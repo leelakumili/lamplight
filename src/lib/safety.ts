@@ -33,12 +33,12 @@ export function checkSafety(text: string): SafetyResult {
   return flagged.length === 0 ? { safe: true } : { safe: false, flagged }
 }
 
-// OpenAI Moderation API — used when an OpenAI key is configured.
+// OpenAI Moderation API — proxied through server.
 // Falls back to wordlist if the API call fails.
-export async function checkSafetyViaAPI(text: string, apiKey: string): Promise<SafetyResult> {
-  const response = await fetch('https://api.openai.com/v1/moderations', {
+export async function checkSafetyViaAPI(text: string): Promise<SafetyResult> {
+  const response = await fetch('/api/proxy/openai/moderations', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ input: text }),
   })
   if (!response.ok) throw new Error(`Moderation API ${response.status}`)
@@ -56,11 +56,11 @@ export async function checkSafetyViaAPI(text: string, apiKey: string): Promise<S
 // Claude has no standalone moderation API — wordlist covers it.
 export async function checkSafetySmart(
   text: string,
-  opts: { useLocal: boolean; provider: string; apiKey: string }
+  opts: { useLocal: boolean; provider: string }
 ): Promise<SafetyResult> {
-  if (!opts.useLocal && opts.provider === 'openai' && opts.apiKey) {
+  if (!opts.useLocal && opts.provider === 'openai') {
     try {
-      return await checkSafetyViaAPI(text, opts.apiKey)
+      return await checkSafetyViaAPI(text)
     } catch {
       // API unavailable — fall through to wordlist
     }

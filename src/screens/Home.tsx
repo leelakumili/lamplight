@@ -35,7 +35,7 @@ const StoryRow = React.memo(function StoryRow({ story, isConfirming, onOpen, onR
 
   function handleTouchEnd(e: React.TouchEvent) {
     const dx = touchStartX.current - e.changedTouches[0].clientX
-    if (dx > 60) onRequestDelete()
+    if (dx > 60) onRequestDelete(story.id)
     if (dx < -40) onCancelDelete()
   }
 

@@ -12,7 +12,8 @@ const PHRASES = [
   { main: 'Getting the ending right,', em: 'then a little more right.' },
 ]
 
-const CIRCUMFERENCE = 2 * Math.PI * 56 // radius 56
+const RING_R = 74
+const CIRCUMFERENCE = 2 * Math.PI * RING_R
 
 interface LoadingProps {
   useLocal?: boolean
@@ -90,7 +91,7 @@ export function Loading({ useLocal = false, onTimeout, onCancel, progress = 0 }:
             boxShadow: '0 0 40px color-mix(in srgb, var(--accent) 53%, transparent)',
           }}
         />
-        {/* Progress ring — always visible for local, shows track + fill */}
+        {/* Progress ring — sits outside the orb glow, overflow:visible so it isn't clipped */}
         {useLocal && (
           <svg
             style={{
@@ -99,26 +100,27 @@ export function Loading({ useLocal = false, onTimeout, onCancel, progress = 0 }:
               width: 136,
               height: 136,
               transform: 'rotate(-90deg)',
+              overflow: 'visible',
               pointerEvents: 'none',
             }}
             viewBox="0 0 136 136"
           >
             {/* Track */}
             <circle
-              cx="68" cy="68" r="56"
+              cx="68" cy="68" r={RING_R}
               fill="none"
-              stroke="rgba(233,223,201,0.15)"
-              strokeWidth="3.5"
+              stroke="rgba(233,223,201,0.25)"
+              strokeWidth="4"
             />
-            {/* Fill — always rendered, dashoffset goes from full (empty) to 0 (full) */}
+            {/* Fill arc */}
             <circle
-              cx="68" cy="68" r="56"
+              cx="68" cy="68" r={RING_R}
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="3.5"
+              strokeWidth="4"
               strokeLinecap="round"
               strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={CIRCUMFERENCE * (1 - Math.max(progress, 0.01))}
+              strokeDashoffset={CIRCUMFERENCE * (1 - Math.max(progress, 0.008))}
               style={{ transition: 'stroke-dashoffset 1.5s ease' }}
             />
           </svg>

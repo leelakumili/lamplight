@@ -1,0 +1,160 @@
+import type { Setup, ParentInterview } from '../types'
+import { sanitizeInput, checkSafetySmart } from './safety'
+import { SYSTEM_PROMPT, buildParentPrompt, buildTeenPrompt } from './prompt'
+import { MODELS } from './constants'
+
+// Words that prove a title is an incomplete sentence fragment.
+const TRAILING_CONNECTOR = /\b(and|or|but|the|a|an|of|in|on|at|to|for|with|by|from|that|which|this|its|their|his|her|our|your|my|as|if|when|where|while|though|although|because|since|until|unless|after|before|between|within|without|over|under|through|across|against|along|around|near|toward|upon|amid|despite|during|per|than|then|via)\s*[,.]?\s*$/i
+
+function isTitleComplete(title: string, content: string): boolean {
+  if (!title || title.trim().length < 2) return false
+  if (TRAILING_CONNECTOR.test(title.trim())) return false
+  const t = title.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 4).join(' ')
+  const c = content.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 6).join(' ')
+  if (t.length > 6 && c.startsWith(t)) return false
+  return true
+}
+
+function parseResponse(text: string): { title: string; content: string } {
+  const lines = text.trim().split('\n')
+  let title = lines[0].trim()
+  title = title.replace(/^(title|story title|title:)\s*/i, '').replace(/^\*+|\*+$/g, '').trim()
+
+  const wordCount = title.split(/\s+/).length
+  if (wordCount > 8 || title.length > 60) {
+    const shortTitle = title.split(/\s+/).slice(0, 5).join(' ').replace(/[,;:.!?]+$/, '')
+    return { title: shortTitle, content: lines.join('\n').trim() }
+  }
+
+  let contentStart = 1
+  while (contentStart < lines.length && lines[contentStart].trim() === '') contentStart++
+  return { title, content: lines.slice(contentStart).join('\n').trim() }
+}
+
+// ── Provider adapters ─────────────────────────────────────────────────────────
+
+async function callClaude(system: string, user: string): Promise<string> {
+  const res = await fetch('/api/proxy/anthropic', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: MODELS.claudeSonnet,
+      max_tokens: 2500,
+      system,
+      messages: [{ role: 'user', content: user }],
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(err.error?.message || `Claude API error: ${res.status}`)
+  }
+  const data = await res.json() as { content: Array<{ text: string }> }
+  return data.content[0].text
+}
+
+async function callOpenAI(system: string, user: string): Promise<string> {
+  const res = await fetch('/api/proxy/openai/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: MODELS.openaiChat,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(err.error?.message || `OpenAI API error: ${res.status}`)
+  }
+  const data = await res.json() as { choices: Array<{ message: { content: string } }> }
+  return data.choices[0].message.content
+}
+
+async function callOllama(model: string, system: string, user: string): Promise<string> {
+  const res = await fetch('/api/proxy/ollama/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      stream: false,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+    }),
+  })
+  if (!res.ok) throw new Error(`Ollama error: ${res.status} — check that the model name matches 'ollama list' exactly`)
+  const data = await res.json() as { message: { content: string } }
+  return data.message.content
+}
+
+// Single dispatch — used by both generation and title-only fallback.
+function callLLM(setup: Pick<Setup, 'useLocal' | 'provider' | 'ollamaModel'>, system: string, user: string): Promise<string> {
+  if (setup.useLocal)
+    return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user)
+  if (setup.provider === 'claude')
+    return callClaude(system, user)
+  return callOpenAI(system, user)
+}
+
+// Last-resort title repair — targets only the title without re-generating the story.
+async function generateTitleOnly(firstSentence: string, setup: Setup): Promise<string> {
+  const system = 'You write short story titles. Reply with ONLY the title — 2 to 5 words, a complete phrase, no punctuation at the end. Nothing else.'
+  const user   = `Opening sentence of a teen short story:\n"${firstSentence}"\n\nWrite the title.`
+  try {
+    const raw     = await callLLM(setup, system, user)
+    const cleaned = raw.trim().replace(/^["'*]+|["'*]+$/g, '').trim()
+    if (cleaned && !TRAILING_CONNECTOR.test(cleaned)) return cleaned
+  } catch { /* fall through */ }
+  return "Tonight's Story"
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+export async function generateStory(params: {
+  setup: Setup
+  mode: 'parent' | 'teen'
+  interview?: ParentInterview
+  theme?: string
+  onInputSanitized?: () => void
+}): Promise<{ title: string; content: string }> {
+  const { setup, mode, theme } = params
+
+  let interview = params.interview
+  if (mode === 'parent' && interview) {
+    const fields: (keyof ParentInterview)[] = ['moment', 'whoNote', 'emotionNote', 'destination']
+    let wasFlagged = false
+    const cleaned = { ...interview }
+    for (const field of fields) {
+      const val = cleaned[field]
+      if (typeof val === 'string') {
+        const result = sanitizeInput(val)
+        if (result.wasFlagged) { wasFlagged = true; (cleaned as Record<string, unknown>)[field] = result.text }
+      }
+    }
+    if (wasFlagged) { interview = cleaned; params.onInputSanitized?.() }
+  }
+
+  const userPrompt = mode === 'parent' && interview
+    ? buildParentPrompt(setup, interview)
+    : buildTeenPrompt(setup, theme || 'Just somewhere else')
+
+  const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const raw = await callLLM(setup, SYSTEM_PROMPT, userPrompt)
+
+    const { safe } = await checkSafetySmart(raw, safetyOpts)
+    if (!safe) {
+      if (attempt === 2) throw new Error("The story contained content that isn't appropriate for this app. Please try again.")
+      continue
+    }
+
+    const parsed = parseResponse(raw)
+    if (!isTitleComplete(parsed.title, parsed.content)) {
+      if (attempt < 2) continue
+      const firstSentence = parsed.content.split(/(?<=[.!?])\s/)[0].trim()
+      return { ...parsed, title: await generateTitleOnly(firstSentence, setup) }
+    }
+
+    return parsed
+  }
+
+  throw new Error('Story generation failed.')
+}

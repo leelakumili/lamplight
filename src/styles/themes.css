@@ -1,0 +1,164 @@
+/* Storythread — 4-theme token system */
+
+/* ── Default (editorial-calm) tokens on :root so vars are
+   always defined even before JS runs ─────────────────── */
+:root {
+  --bg: #faf4e8;
+  --bg2: #f3ead8;
+  --bg3: #ebdfc7;
+  --ink: #1f1b16;
+  --ink70: #3e3830;
+  --ink50: #76705f;
+  --ink30: #b2aa97;
+  --ink15: #dfd5bd;
+  --accent: #c9924a;
+  --accent-s: #e5b574;
+  --accent2: #a35d3a;
+  --serif: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+  --sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --r-card: 22px;
+  --r-pill: 14px;
+  --shadow: none;
+  --w-h: 400;
+  --cta: linear-gradient(135deg, #c9924a, #a35d3a);
+  --cta-fg: #faf4e8;
+  --dark-bg: #15182a;
+  --dark-bg2: #1c2138;
+  --dark-bg3: #262c47;
+  --dark-ink: #e9dfc9;
+  --dark-ink70: rgba(233, 223, 201, 0.66);
+  --dark-ink30: rgba(233, 223, 201, 0.32);
+  --dark-ink15: rgba(233, 223, 201, 0.12);
+
+  /* Reader sepia mode — fixed warm-dark palette, independent of app theme */
+  --reader-sepia-bg:         #2a2218;
+  --reader-sepia-bg2:        #3d3020;
+  --reader-sepia-grad-start: #1e1708;
+  --reader-sepia-grad-end:   #2a2010;
+}
+
+/* ── 1. Editorial Calm (default warm serif) ─────────────── */
+[data-theme='editorial-calm'] {
+  --bg: #faf4e8;
+  --bg2: #f3ead8;
+  --bg3: #ebdfc7;
+  --ink: #1f1b16;
+  --ink70: #3e3830;
+  --ink50: #76705f;
+  --ink30: #b2aa97;
+  --ink15: #dfd5bd;
+  --accent: #c9924a;
+  --accent-s: #e5b574;
+  --accent2: #a35d3a;
+  --serif: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+  --sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --r-card: 22px;
+  --r-pill: 14px;
+  --shadow: none;
+  --w-h: 400;
+  --cta: linear-gradient(135deg, #c9924a, #a35d3a);
+  --cta-fg: #faf4e8;
+  --dark-bg: #15182a;
+  --dark-bg2: #1c2138;
+  --dark-bg3: #262c47;
+  --dark-ink: #e9dfc9;
+  --dark-ink70: rgba(233, 223, 201, 0.66);
+  --dark-ink30: rgba(233, 223, 201, 0.32);
+  --dark-ink15: rgba(233, 223, 201, 0.12);
+}
+
+/* ── 2. Playful (ages 9–12, saturated + chunky) ────────── */
+[data-theme='playful'] {
+  --bg: #fff7ea;
+  --bg2: #ffe9d4;
+  --bg3: #ffdfc0;
+  --ink: #241a18;
+  --ink70: #6e5c52;
+  --ink50: #8a7060;
+  --ink30: #bdaa9c;
+  --ink15: #ddc9b8;
+  --accent: #7a5cff;
+  --accent-s: #a288ff;
+  --accent2: #ff8a5c;
+  --serif: 'Sora', system-ui, sans-serif;
+  --sans: 'Sora', system-ui, sans-serif;
+  --mono: 'Sora', system-ui, sans-serif;
+  --r-card: 24px;
+  --r-pill: 20px;
+  --shadow: 0 4px 0 #241a18;
+  --w-h: 800;
+  --cta: linear-gradient(135deg, #7a5cff, #ff8a5c);
+  --cta-fg: #fff;
+  --dark-bg: #1a1040;
+  --dark-bg2: #221858;
+  --dark-bg3: #2e2268;
+  --dark-ink: #fff7ea;
+  --dark-ink70: rgba(255, 247, 234, 0.66);
+  --dark-ink30: rgba(255, 247, 234, 0.32);
+  --dark-ink15: rgba(255, 247, 234, 0.12);
+}
+
+/* ── 3. Moody (ages 13–17, expressive dark-first) ──────── */
+[data-theme='moody'] {
+  --bg: #0d0d12;
+  --bg2: #15151c;
+  --bg3: #1e1e28;
+  --ink: #f5f0e8;
+  --ink70: rgba(245, 240, 232, 0.66);
+  --ink50: rgba(245, 240, 232, 0.5);
+  --ink30: rgba(245, 240, 232, 0.36);
+  --ink15: rgba(245, 240, 232, 0.12);
+  --accent: #ff7a59;
+  --accent-s: #ffb38a;
+  --accent2: #7a5cff;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --r-card: 16px;
+  --r-pill: 99px;
+  --shadow: none;
+  --w-h: 400;
+  --cta: linear-gradient(135deg, #ff7a59, #7a5cff);
+  --cta-fg: #f5f0e8;
+  /* Moody is always dark — reading vars = main vars */
+  --dark-bg: #0d0d12;
+  --dark-bg2: #15151c;
+  --dark-bg3: #1e1e28;
+  --dark-ink: #f5f0e8;
+  --dark-ink70: rgba(245, 240, 232, 0.66);
+  --dark-ink30: rgba(245, 240, 232, 0.36);
+  --dark-ink15: rgba(245, 240, 232, 0.12);
+}
+
+/* ── 4. Editorial (zine-confident, bone + acid yellow) ─── */
+[data-theme='editorial'] {
+  --bg: #ecead8;
+  --bg2: #e2dfc7;
+  --bg3: #d8d4bc;
+  --ink: #0a0a0a;
+  --ink70: rgba(10, 10, 10, 0.7);
+  --ink50: rgba(10, 10, 10, 0.5);
+  --ink30: rgba(10, 10, 10, 0.3);
+  --ink15: rgba(10, 10, 10, 0.18);
+  --accent: #d6ff3d;
+  --accent-s: #e0ff7a;
+  --accent2: #e8492c;
+  --serif: 'Space Grotesk', system-ui, sans-serif;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --r-card: 2px;
+  --r-pill: 2px;
+  --shadow: none;
+  --w-h: 700;
+  --cta: #0a0a0a;
+  --cta-fg: #ecead8;
+  --dark-bg: #0a0a0a;
+  --dark-bg2: #141414;
+  --dark-bg3: #1e1e1e;
+  --dark-ink: #ecead8;
+  --dark-ink70: rgba(236, 234, 216, 0.66);
+  --dark-ink30: rgba(236, 234, 216, 0.32);
+  --dark-ink15: rgba(236, 234, 216, 0.12);
+}

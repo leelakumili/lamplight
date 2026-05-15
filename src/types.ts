@@ -32,6 +32,7 @@ export interface Setup {
   defaultFontSize: number
   defaultTheme: 'cream' | 'sepia' | 'midnight'
   defaultFontFamily: 'serif' | 'sans'
+  storyStyle: 'modern' | 'panchatantra'
 }
 
 export interface Story {

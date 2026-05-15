@@ -1,6 +1,6 @@
 import type { Setup, ParentInterview } from '../types'
 import { sanitizeInput, checkSafetySmart } from './safety'
-import { SYSTEM_PROMPT, buildParentPrompt, buildTeenPrompt } from './prompt'
+import { getSystemPrompt, buildParentPrompt, buildTeenPrompt } from './prompt'
 import { MODELS } from './constants'
 
 // Words that prove a title is an incomplete sentence fragment.
@@ -138,7 +138,7 @@ export async function generateStory(params: {
   const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider }
 
   for (let attempt = 0; attempt < 3; attempt++) {
-    const raw = await callLLM(setup, SYSTEM_PROMPT, userPrompt)
+    const raw = await callLLM(setup, getSystemPrompt(setup.storyStyle || 'modern'), userPrompt)
 
     const { safe } = await checkSafetySmart(raw, safetyOpts)
     if (!safe) {

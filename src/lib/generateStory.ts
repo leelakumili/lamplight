@@ -18,17 +18,25 @@ function isTitleComplete(title: string, content: string): boolean {
 function parseResponse(text: string): { title: string; content: string } {
   const lines = text.trim().split('\n')
   let title = lines[0].trim()
-  title = title.replace(/^(title|story title|title:)\s*/i, '').replace(/^\*+|\*+$/g, '').trim()
-
-  const wordCount = title.split(/\s+/).length
-  if (wordCount > 8 || title.length > 60) {
-    const shortTitle = title.split(/\s+/).slice(0, 5).join(' ').replace(/[,;:.!?]+$/, '')
-    return { title: shortTitle, content: lines.join('\n').trim() }
-  }
+  // Strip common model prefixes: "Title:", "# Heading", "**bold**", asterisks
+  title = title
+    .replace(/^#+\s*/, '')
+    .replace(/^(title|story title|title:)\s*/i, '')
+    .replace(/^\*+|\*+$/g, '')
+    .trim()
 
   let contentStart = 1
   while (contentStart < lines.length && lines[contentStart].trim() === '') contentStart++
-  return { title, content: lines.slice(contentStart).join('\n').trim() }
+  const content = lines.slice(contentStart).join('\n').trim()
+
+  const wordCount = title.split(/\s+/).length
+  if (wordCount > 8 || title.length > 60) {
+    // Truncate — but always use content *without* the title line (already done above)
+    const shortTitle = title.split(/\s+/).slice(0, 5).join(' ').replace(/[,;:.!?]+$/, '')
+    return { title: shortTitle, content }
+  }
+
+  return { title, content }
 }
 
 // ── Provider adapters ─────────────────────────────────────────────────────────

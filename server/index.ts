@@ -3,8 +3,9 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { setCookie, getCookie } from 'hono/cookie'
 import { timingSafeEqual } from 'crypto'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { hostname } from 'os'
+import { resolve } from 'path'
 import { config } from './lib/config'
 import { createSession, destroySession } from './lib/session'
 import { authMiddleware } from './middleware/auth'
@@ -52,8 +53,16 @@ app.route('/api/proxy', proxy)
 
 // ── SPA static files ──────────────────────────────────────────────────────────
 
-app.use('/*', serveStatic({ root: './dist' }))
-app.get('/*', (c) => c.html(readFileSync('./dist/index.html', 'utf-8')))
+const distDir  = resolve(process.cwd(), 'dist')
+const indexHtml = resolve(distDir, 'index.html')
+
+if (!existsSync(indexHtml)) {
+  console.error('\n  ERROR: dist/ not found. Run "npm run build" first.\n')
+  process.exit(1)
+}
+
+app.use('/*', serveStatic({ root: distDir }))
+app.get('/*', (c) => c.html(readFileSync(indexHtml, 'utf-8')))
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 

@@ -69,9 +69,11 @@ proxy.all('/ollama/*', async (c) => {
   })
 
   if (isStreaming && res.body) {
-    return new Response(res.body, {
-      status: res.status,
-      headers: { 'Content-Type': 'application/x-ndjson' },
+    // Use c.body() so @hono/node-server correctly pipes the ReadableStream
+    return c.body(res.body as ReadableStream, res.status as any, {
+      'Content-Type': 'application/x-ndjson',
+      'Transfer-Encoding': 'chunked',
+      'X-Accel-Buffering': 'no',
     })
   }
 

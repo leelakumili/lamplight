@@ -12,13 +12,16 @@ const PHRASES = [
   { main: 'Getting the ending right,', em: 'then a little more right.' },
 ]
 
+const CIRCUMFERENCE = 2 * Math.PI * 56 // radius 56
+
 interface LoadingProps {
   useLocal?: boolean
   onTimeout?: () => void
+  onCancel?: () => void
   progress?: number
 }
 
-export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingProps) {
+export function Loading({ useLocal = false, onTimeout, onCancel, progress = 0 }: LoadingProps) {
   const [longWait, setLongWait] = useState(false)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -48,6 +51,7 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
   }, [longWait])
 
   const phrase = PHRASES[phraseIndex]
+  const pct = Math.round(progress * 100)
 
   return (
     <div
@@ -62,12 +66,13 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
         animation: 'st-fade-in 0.4s ease both',
       }}
     >
-      {/* Breathing orb with optional progress ring */}
-      <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 48 }}>
+      {/* Breathing orb + progress ring */}
+      <div style={{ position: 'relative', width: 136, height: 136, marginBottom: 40 }}>
+        {/* Orb glow */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            inset: 8,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 35% 35%, var(--accent-s), var(--accent2) 70%, transparent 75%)',
             filter: 'blur(2px)',
@@ -75,39 +80,46 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
             animation: 'st-breath 4.5s ease-in-out infinite',
           }}
         />
+        {/* Orb core */}
         <div
           style={{
             position: 'absolute',
-            inset: 24,
+            inset: 32,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 40% 40%, var(--accent-s), var(--accent))',
             boxShadow: '0 0 40px color-mix(in srgb, var(--accent) 53%, transparent)',
           }}
         />
+        {/* Progress ring — always visible for local, shows track + fill */}
         {useLocal && (
           <svg
             style={{
               position: 'absolute',
-              top: -10,
-              left: -10,
-              width: 140,
-              height: 140,
+              inset: 0,
+              width: 136,
+              height: 136,
               transform: 'rotate(-90deg)',
-              overflow: 'visible',
               pointerEvents: 'none',
             }}
-            viewBox="0 0 140 140"
+            viewBox="0 0 136 136"
           >
-            <circle cx="70" cy="70" r="66" fill="none" stroke="rgba(233,223,201,0.12)" strokeWidth="3" />
+            {/* Track */}
             <circle
-              cx="70" cy="70" r="66"
+              cx="68" cy="68" r="56"
+              fill="none"
+              stroke="rgba(233,223,201,0.15)"
+              strokeWidth="3.5"
+            />
+            {/* Fill — always rendered, dashoffset goes from full (empty) to 0 (full) */}
+            <circle
+              cx="68" cy="68" r="56"
               fill="none"
               stroke="var(--accent)"
-              strokeWidth="3"
+              strokeWidth="3.5"
               strokeLinecap="round"
-              strokeDasharray={`${2 * Math.PI * 66}`}
-              strokeDashoffset={`${2 * Math.PI * 66 * (1 - progress)}`}
-              style={{ transition: 'stroke-dashoffset 1.2s ease', opacity: progress > 0 ? 1 : 0 }}
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={CIRCUMFERENCE * (1 - Math.max(progress, 0.01))}
+              style={{ transition: 'stroke-dashoffset 1.5s ease' }}
             />
           </svg>
         )}
@@ -116,7 +128,7 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
       {/* Kicker */}
       <div
         style={{
-          fontFamily: "var(--sans)",
+          fontFamily: 'var(--sans)',
           fontSize: 10,
           fontWeight: 500,
           letterSpacing: '0.22em',
@@ -131,7 +143,7 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
       {/* Cycling phrase */}
       <div
         style={{
-          fontFamily: "var(--serif)",
+          fontFamily: 'var(--serif)',
           fontSize: 22,
           fontWeight: 400,
           lineHeight: 1.3,
@@ -153,8 +165,8 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
         )}
       </div>
 
-      {/* Progress dots */}
-      {!longWait && (
+      {/* Progress dots — only when not local (cloud has no ring) */}
+      {!longWait && !useLocal && (
         <div style={{ display: 'flex', gap: 6, marginTop: 36 }}>
           {PHRASES.map((_, i) => (
             <div
@@ -171,24 +183,49 @@ export function Loading({ useLocal = false, onTimeout, progress = 0 }: LoadingPr
         </div>
       )}
 
-      {/* Sub */}
+      {/* Sub-text */}
       <p
         style={{
-          fontFamily: "var(--sans)",
+          fontFamily: 'var(--sans)',
           fontSize: 13,
           color: 'rgba(233,223,201,0.5)',
           textAlign: 'center',
           lineHeight: 1.55,
           maxWidth: 260,
-          marginTop: 32,
+          marginTop: 28,
+          marginBottom: 0,
         }}
       >
-        {useLocal && progress > 0
-          ? `${Math.round(progress * 100)}% written`
+        {useLocal && progress > 0.01
+          ? `${pct}% written`
           : useLocal
             ? 'Local models take 1–3 minutes.'
             : 'Usually about twenty seconds.'}
       </p>
+
+      {/* Cancel — shown after 15s for local, always available */}
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          style={{
+            marginTop: 24,
+            fontFamily: 'var(--sans)',
+            fontSize: 13,
+            fontWeight: 400,
+            color: 'rgba(233,223,201,0.3)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px 16px',
+            borderRadius: 8,
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(233,223,201,0.7)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(233,223,201,0.3)')}
+        >
+          Cancel
+        </button>
+      )}
     </div>
   )
 }

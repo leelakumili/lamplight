@@ -437,19 +437,25 @@ export default function App() {
           />
         ) : null
 
-      case 'loading':
+      case 'loading': {
+        const cancelGeneration = () => {
+          generationControllerRef.current?.abort()
+          generationControllerRef.current = null
+          setGenerationProgress(0)
+          nav('home')
+        }
         return (
           <Loading
             useLocal={effectiveSetup?.useLocal ?? false}
             progress={generationProgress}
+            onCancel={cancelGeneration}
             onTimeout={() => {
-              generationControllerRef.current?.abort()
-              generationControllerRef.current = null
+              cancelGeneration()
               showToast('Generation timed out. Please try again.')
-              nav('home')
             }}
           />
         )
+      }
 
       case 'reading':
         return currentStory ? (

@@ -300,10 +300,12 @@ export function Reading({
           <button
             onClick={e => {
               e.stopPropagation()
-              const next: VoicePersona = voicePersona === 'woman' ? 'man' : 'woman'
+              const order: VoicePersona[] = ['bella', 'lily', 'woman', 'man']
+              const next = order[(order.indexOf(voicePersona) + 1) % order.length]
               setVoicePersona(next)
               if (isSpeaking || isPaused) {
                 window.speechSynthesis?.cancel()
+                if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
                 setIsSpeaking(false)
                 setIsPaused(false)
               }
@@ -326,7 +328,9 @@ export function Reading({
               gap: 4,
             }}
           >
-            <span style={{ opacity: 0.85 }}>{voicePersona === 'woman' ? 'Soft' : 'Deep'}</span>
+            <span style={{ opacity: 0.85 }}>
+              {{ bella: 'Bella', lily: 'Lily', woman: 'Soft', man: 'Deep' }[voicePersona]}
+            </span>
           </button>
 
           {/* Type-sheet icon */}

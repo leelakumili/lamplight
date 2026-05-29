@@ -51,6 +51,25 @@ proxy.post('/openai/moderations', async (c) => {
   return c.json(data, res.status as any)
 })
 
+proxy.post('/elevenlabs/tts', async (c) => {
+  if (!config.elevenLabsKey) return c.json({ error: 'ElevenLabs API key not configured on server' }, 503)
+  const { voiceId, text } = await c.req.json() as { voiceId: string; text: string }
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: {
+      'xi-api-key':   config.elevenLabsKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_turbo_v2',
+      voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+    }),
+  })
+  if (!res.ok) return c.json({ error: 'ElevenLabs request failed' }, res.status as any)
+  return c.body(res.body as ReadableStream, 200, { 'Content-Type': 'audio/mpeg' })
+})
+
 proxy.all('/ollama/*', async (c) => {
   const suffix = c.req.path.replace(/^\/api\/proxy\/ollama/, '')
   const method = c.req.method

@@ -231,11 +231,24 @@ flowchart TD
 
 ## Read-aloud voice selection
 
-Read-aloud uses the Web Speech API with warm-voice selection via `src/lib/tts.ts`.
+Read-aloud supports two modes: **ElevenLabs** (cloud, higher quality) and **Web Speech API** (on-device, no key required). Both are implemented in `src/lib/tts.ts`.
+
+### ElevenLabs voices (Bella & Lily)
+
+Routed through a server-side proxy at `/api/proxy/elevenlabs/tts` so the API key is never exposed to the browser. Requires `ELEVENLABS_API_KEY` in `.env`.
+
+| Voice | ElevenLabs voice ID | Character |
+|---|---|---|
+| Bella | `EXAVITQu4vr4xnSDxMaL` | Warm & friendly |
+| Lily | `pFZP5JQG7iQjIQuC4Bku` | Bright & lively |
+
+Uses `eleven_turbo_v2` model (low latency). Audio is streamed as `audio/mpeg`, played via `HTMLAudioElement`. Pause/resume is handled via `audio.pause()` / `audio.play()`.
+
+### Web Speech API voices (Soft & Deep, on-device fallback)
 
 **The Chrome/Android empty-voices bug:** `speechSynthesis.getVoices()` returns `[]` on the first call in Chrome until the `voiceschanged` event fires. `getVoicesReady()` handles this with a one-time listener.
 
-**Voice priority order (woman persona):**
+**Voice priority order (woman / Soft persona):**
 
 | Priority | Voice name | Platform |
 |---|---|---|
@@ -246,7 +259,7 @@ Read-aloud uses the Web Speech API with warm-voice selection via `src/lib/tts.ts
 | 5 | Microsoft Jenny Online | Windows |
 | 6 | Google UK English Female | Android Chrome |
 
-Man persona follows the same pattern with Daniel / Tom / Fred / Microsoft Guy.
+Man / Deep persona follows the same pattern with Daniel / Tom / Fred / Microsoft Guy.
 
 **Bedtime pacing settings:**
 
@@ -334,8 +347,9 @@ graph LR
 | `ANTHROPIC_API_KEY` | If using Claude | — | Anthropic API |
 | `OPENAI_API_KEY` | If using OpenAI | — | OpenAI API |
 | `OLLAMA_BASE_URL` | If using Ollama | `http://localhost:11434` | Ollama endpoint |
+| `ELEVENLABS_API_KEY` | If using Bella/Lily voices | — | ElevenLabs TTS — free tier at elevenlabs.io |
 
-Only set keys for the provider you use. Others can be omitted.
+Only set keys for the providers you use. Others can be omitted.
 
 ---
 

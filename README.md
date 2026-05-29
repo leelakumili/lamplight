@@ -93,6 +93,10 @@ Add `ANTHROPIC_API_KEY` to `.env` → get a key at [console.anthropic.com](https
 
 Add `OPENAI_API_KEY` to `.env` → get a key at [platform.openai.com](https://platform.openai.com)
 
+### ElevenLabs (Bella & Lily voices)
+
+Add `ELEVENLABS_API_KEY` to `.env` → free tier at [elevenlabs.io](https://elevenlabs.io) (10,000 chars/month, no credit card). Unlocks the **Bella** and **Lily** read-aloud voices in the reading screen.
+
 ---
 
 ## 🔒 Privacy

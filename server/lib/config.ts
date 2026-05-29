@@ -11,5 +11,6 @@ export const config = {
   pin:          get('APP_PIN'),
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? '',
   openaiKey:    process.env.OPENAI_API_KEY ?? '',
-  ollamaUrl:    process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434',
+  ollamaUrl:      process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434',
+  elevenLabsKey:  process.env.ELEVENLABS_API_KEY ?? '',
 }

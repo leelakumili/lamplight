@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Icon } from '../components/Icon'
 import { paginateStory } from '../lib/utils'
 import { BOOKMARK_TOAST_MS } from '../lib/constants'
-import { getVoicesReady, pickVoice, TTS_RATE, TTS_PITCH, TTS_VOLUME, type VoicePersona } from '../lib/tts'
+import { getVoicesReady, pickVoice, speakWithElevenLabs, isElevenLabsPersona, TTS_RATE, TTS_PITCH, TTS_VOLUME, type VoicePersona } from '../lib/tts'
 import type { Story } from '../types'
 
 interface ReadingProps {
@@ -56,7 +56,8 @@ export function Reading({
   const [voicePersona, setVoicePersona] = useState<VoicePersona>('woman')
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([])
+  const audioRef     = useRef<HTMLAudioElement | null>(null)
+  const voicesRef    = useRef<SpeechSynthesisVoice[]>([])
 
   const pages = useMemo(() => paginateStory(story.content), [story.content])
   const totalPages = pages.length
@@ -71,32 +72,43 @@ export function Reading({
   useEffect(() => {
     return () => {
       window.speechSynthesis?.cancel()
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
     }
   }, [])
 
-  // When page changes, stop speech (cancel is a no-op when nothing is playing)
+  // When page changes, stop speech
   useEffect(() => {
     window.speechSynthesis?.cancel()
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
     setIsSpeaking(false)
     setIsPaused(false)
   }, [page])
 
   function speakPage(text: string) {
     window.speechSynthesis?.cancel()
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+
+    if (isElevenLabsPersona(voicePersona)) {
+      setIsSpeaking(true)
+      setIsPaused(false)
+      speakWithElevenLabs(
+        text,
+        voicePersona,
+        audioRef,
+        () => { setIsSpeaking(false); setIsPaused(false) },
+        () => { setIsSpeaking(false); setIsPaused(false) },
+      )
+      return
+    }
+
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.rate   = TTS_RATE
     utterance.pitch  = TTS_PITCH
     utterance.volume = TTS_VOLUME
     const voice = pickVoice(voicePersona, voicesRef.current)
     if (voice) utterance.voice = voice
-    utterance.onend = () => {
-      setIsSpeaking(false)
-      setIsPaused(false)
-    }
-    utterance.onerror = () => {
-      setIsSpeaking(false)
-      setIsPaused(false)
-    }
+    utterance.onend  = () => { setIsSpeaking(false); setIsPaused(false) }
+    utterance.onerror = () => { setIsSpeaking(false); setIsPaused(false) }
     utteranceRef.current = utterance
     window.speechSynthesis?.speak(utterance)
     setIsSpeaking(true)
@@ -105,11 +117,21 @@ export function Reading({
 
   function toggleSpeech() {
     if (isSpeaking && !isPaused) {
-      window.speechSynthesis?.pause()
-      setIsPaused(true)
+      if (isElevenLabsPersona(voicePersona)) {
+        audioRef.current?.pause()
+        setIsPaused(true)
+      } else {
+        window.speechSynthesis?.pause()
+        setIsPaused(true)
+      }
     } else if (isPaused) {
-      window.speechSynthesis?.resume()
-      setIsPaused(false)
+      if (isElevenLabsPersona(voicePersona)) {
+        audioRef.current?.play()
+        setIsPaused(false)
+      } else {
+        window.speechSynthesis?.resume()
+        setIsPaused(false)
+      }
     } else {
       speakPage(currentPageText)
     }
@@ -117,6 +139,7 @@ export function Reading({
 
   function handleBack() {
     window.speechSynthesis?.cancel()
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
     setIsSpeaking(false)
     setIsPaused(false)
     onBack()
@@ -704,41 +727,45 @@ export function Reading({
             {/* Read-aloud voice */}
             <div>
               <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink70)', marginBottom: 10 }}>Read-aloud voice</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {(['woman', 'man'] as VoicePersona[]).map(persona => (
-                  <button
-                    key={persona}
-                    onClick={() => {
-                      setVoicePersona(persona)
-                      // If currently speaking, restart with new voice
-                      if (isSpeaking || isPaused) {
-                        window.speechSynthesis?.cancel()
-                        setIsSpeaking(false)
-                        setIsPaused(false)
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '10px',
-                      borderRadius: 10,
-                      border: `2px solid ${voicePersona === persona ? 'var(--accent)' : 'var(--ink15)'}`,
-                      backgroundColor: voicePersona === persona ? 'var(--bg)' : 'transparent',
-                      fontFamily: "var(--sans)",
-                      fontSize: 14,
-                      color: 'var(--ink)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                    }}
-                  >
-                    {persona === 'woman' ? 'Soft' : 'Deep'}
-                  </button>
-                ))}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {([
+                  { id: 'bella', label: 'Bella', sub: 'Warm & friendly' },
+                  { id: 'lily',  label: 'Lily',  sub: 'Bright & lively' },
+                  { id: 'woman', label: 'Soft',  sub: 'On-device' },
+                  { id: 'man',   label: 'Deep',  sub: 'On-device' },
+                ] as { id: VoicePersona; label: string; sub: string }[]).map(({ id, label, sub }) => {
+                  const active = voicePersona === id
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        setVoicePersona(id)
+                        if (isSpeaking || isPaused) {
+                          window.speechSynthesis?.cancel()
+                          if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+                          setIsSpeaking(false)
+                          setIsPaused(false)
+                        }
+                      }}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: 10,
+                        border: `2px solid ${active ? 'var(--accent)' : 'var(--ink15)'}`,
+                        backgroundColor: active ? 'var(--bg)' : 'transparent',
+                        fontFamily: "var(--sans)",
+                        color: 'var(--ink)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: active ? 600 : 400 }}>{label}</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink40)', marginTop: 2 }}>{sub}</div>
+                    </button>
+                  )
+                })}
               </div>
               <div style={{ fontFamily: "var(--sans)", fontSize: 11, color: 'var(--ink30)', marginTop: 8, lineHeight: 1.4 }}>
-                Uses the warmest available voice on your device
+                Bella &amp; Lily use ElevenLabs — requires your API key
               </div>
             </div>
           </div>

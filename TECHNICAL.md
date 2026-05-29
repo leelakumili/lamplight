@@ -203,6 +203,63 @@ State is a string union (`Screen` type). No router library — the `screen` key 
 
 ---
 
+## Post-story reflection
+
+After finishing a story the `after-story` screen runs a two-phase flow:
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
+flowchart TD
+    A["after-story screen\n(Phase 1)"] --> B{"Reflection\nalready set?"}
+    B -->|no — new story| C["Show 3 reflection cards\n felt-right / felt-okay / didnt-fit"]
+    B -->|yes — revisiting| E
+    C --> D["Tap saves reflection\nto IndexedDB immediately"]
+    D --> E["Phase 2: action cards\n Save · One more · Good night"]
+    E --> F["Home or regenerate"]
+
+    style A fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+    style B fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style C fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style D fill:#2a201a,stroke:#7c5c38,color:#c9a96e
+    style E fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
+    style F fill:#2a201a,stroke:#c9a96e,color:#e9dfc9
+```
+
+`Story.reflection` is an optional `'felt-right' | 'felt-okay' | 'didnt-fit'` field. It is persisted to IndexedDB on tap — before any navigation — so a fast swipe-away still records it.
+
+---
+
+## Read-aloud voice selection
+
+Read-aloud uses the Web Speech API with warm-voice selection via `src/lib/tts.ts`.
+
+**The Chrome/Android empty-voices bug:** `speechSynthesis.getVoices()` returns `[]` on the first call in Chrome until the `voiceschanged` event fires. `getVoicesReady()` handles this with a one-time listener.
+
+**Voice priority order (woman persona):**
+
+| Priority | Voice name | Platform |
+|---|---|---|
+| 1 | Ava (Enhanced) | macOS / iOS |
+| 2 | Samantha (Enhanced) | macOS / iOS |
+| 3 | Samantha | macOS / iOS |
+| 4 | Microsoft Aria Online | Windows |
+| 5 | Microsoft Jenny Online | Windows |
+| 6 | Google UK English Female | Android Chrome |
+
+Man persona follows the same pattern with Daniel / Tom / Fred / Microsoft Guy.
+
+**Bedtime pacing settings:**
+
+| Parameter | Value | vs. browser default |
+|---|---|---|
+| `rate` | `0.78` | Slower — more soothing |
+| `pitch` | `0.92` | Slightly lower — warmer |
+| `volume` | `0.90` | Slightly pulled back |
+
+Voice persona (woman / man) is session-only state in `Reading.tsx` — not persisted.
+
+---
+
 ## Theming system
 
 ```mermaid

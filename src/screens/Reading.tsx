@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Icon } from '../components/Icon'
 import { paginateStory } from '../lib/utils'
 import { BOOKMARK_TOAST_MS } from '../lib/constants'
+import { getVoicesReady, pickVoice, TTS_RATE, TTS_PITCH, TTS_VOLUME, type VoicePersona } from '../lib/tts'
 import type { Story } from '../types'
 
 interface ReadingProps {
@@ -52,12 +53,19 @@ export function Reading({
   const [showTypeSheet, setShowTypeSheet] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [voicePersona, setVoicePersona] = useState<VoicePersona>('woman')
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([])
 
   const pages = useMemo(() => paginateStory(story.content), [story.content])
   const totalPages = pages.length
   const currentPageText = pages[page] || ''
+
+  // Load voices once — Chrome returns [] on first call until voiceschanged fires
+  useEffect(() => {
+    getVoicesReady().then(voices => { voicesRef.current = voices })
+  }, [])
 
   // Cancel speech on unmount
   useEffect(() => {
@@ -76,8 +84,11 @@ export function Reading({
   function speakPage(text: string) {
     window.speechSynthesis?.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.92
-    utterance.pitch = 1.0
+    utterance.rate   = TTS_RATE
+    utterance.pitch  = TTS_PITCH
+    utterance.volume = TTS_VOLUME
+    const voice = pickVoice(voicePersona, voicesRef.current)
+    if (voice) utterance.voice = voice
     utterance.onend = () => {
       setIsSpeaking(false)
       setIsPaused(false)
@@ -240,7 +251,7 @@ export function Reading({
           </div>
         </div>
 
-        {/* Right side: Speaker + Type buttons */}
+        {/* Right side: Speaker + Voice toggle + Type buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Speaker/Pause button */}
           <button
@@ -260,6 +271,39 @@ export function Reading({
             }}
           >
             <Icon name={isSpeaking && !isPaused ? 'pause' : 'speaker'} size={16} color="var(--dark-ink)" />
+          </button>
+
+          {/* Voice persona toggle */}
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              const next: VoicePersona = voicePersona === 'woman' ? 'man' : 'woman'
+              setVoicePersona(next)
+              if (isSpeaking || isPaused) {
+                window.speechSynthesis?.cancel()
+                setIsSpeaking(false)
+                setIsPaused(false)
+              }
+            }}
+            title={`Voice: ${voicePersona} — tap to switch`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: 36,
+              padding: '0 10px',
+              borderRadius: 20,
+              backgroundColor: 'rgba(15,16,26,0.7)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(233,223,201,0.12)',
+              color: 'var(--dark-ink)',
+              fontFamily: 'var(--sans)',
+              fontSize: 13,
+              cursor: 'pointer',
+              gap: 4,
+            }}
+          >
+            <span style={{ opacity: 0.85 }}>{voicePersona === 'woman' ? 'Soft' : 'Deep'}</span>
           </button>
 
           {/* Type-sheet icon */}
@@ -532,6 +576,8 @@ export function Reading({
               padding: '20px 24px 40px',
               boxShadow: '0 -8px 40px rgba(0,0,0,0.2)',
               animation: 'st-fade-in 0.2s ease both',
+              maxHeight: '80vh',
+              overflowY: 'auto',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -617,7 +663,7 @@ export function Reading({
             </div>
 
             {/* Font family */}
-            <div>
+            <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink70)', marginBottom: 10 }}>Font</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
@@ -652,6 +698,47 @@ export function Reading({
                 >
                   Sans
                 </button>
+              </div>
+            </div>
+
+            {/* Read-aloud voice */}
+            <div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: 'var(--ink70)', marginBottom: 10 }}>Read-aloud voice</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {(['woman', 'man'] as VoicePersona[]).map(persona => (
+                  <button
+                    key={persona}
+                    onClick={() => {
+                      setVoicePersona(persona)
+                      // If currently speaking, restart with new voice
+                      if (isSpeaking || isPaused) {
+                        window.speechSynthesis?.cancel()
+                        setIsSpeaking(false)
+                        setIsPaused(false)
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: 10,
+                      border: `2px solid ${voicePersona === persona ? 'var(--accent)' : 'var(--ink15)'}`,
+                      backgroundColor: voicePersona === persona ? 'var(--bg)' : 'transparent',
+                      fontFamily: "var(--sans)",
+                      fontSize: 14,
+                      color: 'var(--ink)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    {persona === 'woman' ? 'Soft' : 'Deep'}
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontFamily: "var(--sans)", fontSize: 11, color: 'var(--ink30)', marginTop: 8, lineHeight: 1.4 }}>
+                Uses the warmest available voice on your device
               </div>
             </div>
           </div>

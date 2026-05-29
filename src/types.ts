@@ -35,6 +35,8 @@ export interface Setup {
   storyStyle: 'modern' | 'panchatantra'
 }
 
+export type StoryReflection = 'felt-right' | 'felt-okay' | 'didnt-fit'
+
 export interface Story {
   id: string
   title: string
@@ -44,6 +46,7 @@ export interface Story {
   mode: 'parent' | 'teen'
   bookmarked?: boolean
   illustration?: string  // data URI (SVG or image) — persists in IndexedDB
+  reflection?: StoryReflection
 }
 
 export interface ParentInterview {
@@ -88,3 +91,4 @@ export type AppAction =
   | { type: 'ADD_PROFILE'; profile: Profile }
   | { type: 'UPDATE_ACTIVE_PROFILE'; profile: Partial<Profile> }
   | { type: 'UPDATE_STORY_ILLUSTRATION'; id: string; illustration: string }
+  | { type: 'SET_STORY_REFLECTION'; id: string; reflection: StoryReflection }

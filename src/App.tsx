@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, useState, useMemo, useRef } from 'react'
-import type { AppState, AppAction, Screen, ParentInterview, Setup, Story } from './types'
+import type { AppState, AppAction, Screen, ParentInterview, Setup, Story, StoryReflection } from './types'
 import { saveSetup, loadSetup, saveStory, loadStories, deleteStory, saveProfiles, loadProfiles, saveActiveProfileId, loadActiveProfileId } from './lib/db'
 import { getStoredTheme, applyTheme, type AppTheme } from './lib/theme'
 import { generateStory } from './lib/generateStory'
@@ -101,6 +101,15 @@ function reducer(state: AppState, action: AppAction): AppState {
       )
       const currentStory = state.currentStory?.id === action.id
         ? { ...state.currentStory, illustration: action.illustration }
+        : state.currentStory
+      return { ...state, history, currentStory }
+    }
+    case 'SET_STORY_REFLECTION': {
+      const history = state.history.map(s =>
+        s.id === action.id ? { ...s, reflection: action.reflection } : s
+      )
+      const currentStory = state.currentStory?.id === action.id
+        ? { ...state.currentStory, reflection: action.reflection }
         : state.currentStory
       return { ...state, history, currentStory }
     }
@@ -483,7 +492,13 @@ export default function App() {
         return currentStory ? (
           <AfterStory
             story={{ title: currentStory.title, content: currentStory.content }}
+            existingReflection={currentStory.reflection}
             onBack={() => nav('reading')}
+            onReflect={async (reflection: StoryReflection) => {
+              dispatch({ type: 'SET_STORY_REFLECTION', id: currentStory.id, reflection })
+              const updated = { ...currentStory, reflection }
+              await saveStory(updated)
+            }}
             onSave={() => {
               showToast('Story saved.')
               nav('home')

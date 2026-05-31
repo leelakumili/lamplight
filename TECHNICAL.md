@@ -64,6 +64,8 @@ flowchart TD
 Sessions live in memory — cleared on server restart (intentional, home network)  
 API requests without session → `401`; browser requests → redirect to `/login`
 
+**How it works in detail:** The login form (`/login`, server-rendered HTML) POSTs the PIN as JSON. The server compares it with `timingSafeEqual` to prevent timing attacks, then calls `randomBytes(32)` to generate a session token, stores it in an in-process `Set`, and sets it as an `httpOnly` cookie. Every subsequent request passes through `authMiddleware`, which reads the cookie and checks the `Set` — no database, no JWT. Sessions are intentionally ephemeral: a server restart invalidates all sessions, which is acceptable for a home-network app where the family is always on the same Wi-Fi.
+
 ---
 
 ## AI Proxy endpoints
@@ -121,6 +123,20 @@ flowchart TD
     style G fill:#2a201a,stroke:#7c5c38,color:#c9a96e
     style H fill:#3a2c1e,stroke:#c9a96e,color:#e9dfc9
 ```
+
+---
+
+## Content moderation
+
+Safety checking runs in two layers, both implemented in `src/lib/safety.ts`.
+
+**Layer 1 — local wordlist (`checkSafety`):** A set of `RegExp` patterns covering strong profanity, explicit sexual terms, self-harm language, and slurs. Uses `\b` word boundaries to avoid false positives (e.g. "class" does not match "ass"). This runs synchronously with no network call and is always available.
+
+**Layer 2 — OpenAI Moderation API (`checkSafetyViaAPI`):** When the configured provider is OpenAI, the generated story text is also sent to `/api/proxy/openai/moderations` (proxied server-side so the API key stays on the server). The API returns per-category flags; any flagged result is treated as unsafe.
+
+**Smart dispatch (`checkSafetySmart`):** The story generation pipeline calls this wrapper, which routes to Layer 2 when `provider === 'openai'` and falls back to Layer 1 if the API call fails or if the provider is Anthropic or Ollama (neither has a standalone moderation API). A failed moderation API call never blocks story delivery — the wordlist catches it instead.
+
+Unsafe content causes the generation pipeline to retry (up to 3 attempts total). Input text from the parent interview is also sanitised with `sanitizeInput` before being sent to the LLM — unsafe words are replaced with `***`.
 
 ---
 

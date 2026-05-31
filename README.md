@@ -106,6 +106,18 @@ Add `ELEVENLABS_API_KEY` to `.env` → free tier at [elevenlabs.io](https://elev
 - **Parent interview answers never saved** — cleared the moment the story generates
 - **Stories stay on each device** — IndexedDB, local only
 
+**What leaves your machine:**
+
+| Feature | Data sent | Destination |
+|---|---|---|
+| Story generation (Claude) | Parent answers + teen name/friends | Anthropic API |
+| Story generation (OpenAI) | Parent answers + teen name/friends | OpenAI API |
+| Story generation (Ollama) | Parent answers + teen name/friends | Your laptop only — fully local |
+| Bella / Lily voices | Story text narrated aloud | ElevenLabs API |
+| Soft / Deep voices | Story text narrated aloud | Your device only (Web Speech API) |
+
+For complete privacy, use **Ollama** for story generation and the **Soft** or **Deep** read-aloud voices — no data leaves your home network.
+
 ---
 
 ## 🛠 Development

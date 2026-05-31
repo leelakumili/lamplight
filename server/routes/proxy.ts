@@ -8,9 +8,9 @@ proxy.post('/anthropic', async (c) => {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key':          config.anthropicKey,
-      'anthropic-version':  '2023-06-01',
-      'content-type':       'application/json',
+      'x-api-key': config.anthropicKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
     },
     body: await c.req.text(),
   })
@@ -57,7 +57,7 @@ proxy.post('/elevenlabs/tts', async (c) => {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
     headers: {
-      'xi-api-key':   config.elevenLabsKey,
+      'xi-api-key': config.elevenLabsKey,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -80,7 +80,6 @@ proxy.all('/ollama/*', async (c) => {
     try { isStreaming = (JSON.parse(bodyText) as { stream?: boolean }).stream === true } catch { /* ignore */ }
   }
 
-  console.log(`[ollama] ${method} ${config.ollamaUrl}${suffix} stream=${isStreaming}`)
   const res = await fetch(`${config.ollamaUrl}${suffix}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -88,7 +87,6 @@ proxy.all('/ollama/*', async (c) => {
   })
 
   if (isStreaming && res.body) {
-    // Use c.body() so @hono/node-server correctly pipes the ReadableStream
     return c.body(res.body as ReadableStream, res.status as any, {
       'Content-Type': 'application/x-ndjson',
       'Transfer-Encoding': 'chunked',
@@ -97,10 +95,14 @@ proxy.all('/ollama/*', async (c) => {
   }
 
   const text = await res.text()
+  if (!res.ok) {
+    console.error(`[ollama] ${res.status} from ${config.ollamaUrl}${suffix}`)
+    console.error(`[ollama] error response:`, text)
+  }
   // Ollama may return NDJSON (one object per line) even with stream:false.
   // Parse the last non-empty line which contains the complete response.
   const lines = text.split('\n').filter(l => l.trim())
-  const last  = lines[lines.length - 1] ?? '{}'
+  const last = lines[lines.length - 1] ?? '{}'
   try {
     return c.json(JSON.parse(last), res.status as any)
   } catch {

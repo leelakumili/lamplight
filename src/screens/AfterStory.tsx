@@ -13,9 +13,9 @@ interface AfterStoryProps {
 }
 
 const REFLECTIONS: { value: StoryReflection; label: string; sub: string }[] = [
-  { value: 'felt-right',  label: 'That felt right.',      sub: 'It landed the way I needed' },
-  { value: 'felt-okay',   label: 'Felt okay.',             sub: 'Close, but not quite there' },
-  { value: 'didnt-fit',   label: "Didn't really fit.",     sub: 'Tonight needed something else' },
+  { value: 'felt-right', label: 'That felt right.', sub: 'It landed the way I needed' },
+  { value: 'felt-okay', label: 'Felt okay.', sub: 'Close, but not quite there' },
+  { value: 'didnt-fit', label: "Didn't really fit.", sub: 'Tonight needed something else' },
 ]
 
 export function AfterStory({ story, existingReflection, onReflect, onSave, onDone, onBack, onRegenerate }: AfterStoryProps) {
@@ -31,7 +31,7 @@ export function AfterStory({ story, existingReflection, onReflect, onSave, onDon
   }
 
   async function handleShare() {
-    const text = `${story.title}\n\n${story.content}\n\n— A Storythread story`
+    const text = `${story.title}\n\n${story.content}\n\n— A Lamplight story`
     if (navigator.share) {
       try {
         await navigator.share({ title: story.title, text })
@@ -182,8 +182,8 @@ export function AfterStory({ story, existingReflection, onReflect, onSave, onDon
               {reflection === 'felt-right'
                 ? 'Keep it for later?'
                 : reflection === 'felt-okay'
-                ? 'Want to try another one?'
-                : 'Want something different tonight?'}
+                  ? 'Want to try another one?'
+                  : 'Want something different tonight?'}
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

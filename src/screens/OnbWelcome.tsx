@@ -56,7 +56,7 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
           marginBottom: 18,
         }}
       >
-        Storythread
+        Lamplight
       </div>
 
       {/* Headline */}

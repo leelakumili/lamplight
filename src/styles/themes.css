@@ -1,4 +1,4 @@
-/* Storythread — 4-theme token system */
+/* lamplight — 4-theme token system */
 
 /* ── Default (editorial-calm) tokens on :root so vars are
    always defined even before JS runs ─────────────────── */
@@ -32,10 +32,10 @@
   --dark-ink15: rgba(233, 223, 201, 0.12);
 
   /* Reader sepia mode — fixed warm-dark palette, independent of app theme */
-  --reader-sepia-bg:         #2a2218;
-  --reader-sepia-bg2:        #3d3020;
+  --reader-sepia-bg: #2a2218;
+  --reader-sepia-bg2: #3d3020;
   --reader-sepia-grad-start: #1e1708;
-  --reader-sepia-grad-end:   #2a2010;
+  --reader-sepia-grad-end: #2a2010;
 }
 
 /* ── 1. Editorial Calm (default warm serif) ─────────────── */

@@ -1,6 +1,6 @@
 export type AppTheme = 'editorial-calm' | 'playful' | 'moody' | 'editorial'
 
-const STORAGE_KEY = 'storythread.theme'
+const STORAGE_KEY = 'lamplight.theme'
 const DEFAULT_THEME: AppTheme = 'editorial-calm'
 
 export function getStoredTheme(): AppTheme {

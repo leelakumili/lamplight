@@ -5,7 +5,7 @@ let dbPromise: Promise<IDBPDatabase> | null = null
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB('storythread', 1, {
+    dbPromise = openDB('lamplight', 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('data')) {
           db.createObjectStore('data')

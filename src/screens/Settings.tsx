@@ -312,7 +312,7 @@ export function Settings({ setup: initialSetup, profiles, activeProfileId, appTh
 
       {/* Footer */}
       <div style={{ padding: '16px', textAlign: 'center', fontFamily: "var(--mono)", fontSize: 11, color: 'var(--ink50)' }}>
-        Storythread · v1.0 · local-first
+        Lamplight · v1.0 · local-first
       </div>
     </div>
   )

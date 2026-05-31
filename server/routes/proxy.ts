@@ -71,7 +71,7 @@ proxy.post('/elevenlabs/tts', async (c) => {
 })
 
 proxy.all('/ollama/*', async (c) => {
-  const suffix = c.req.path.replace(/^\/api\/proxy\/ollama/, '')
+  const suffix = c.req.path.replace(/^\/ollama/, '')
   const method = c.req.method
   const bodyText = method !== 'GET' ? await c.req.text() : undefined
 

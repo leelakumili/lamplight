@@ -5,7 +5,7 @@ export const MODELS = {
   claudeHaiku:  'claude-haiku-4-5-20251001',
   openaiChat:   'gpt-4o',
   openaiImage:  'dall-e-3',
-  ollamaDefault: 'mistral',
+  ollamaDefault: 'gemma3:12b',
 } as const
 
 export const ANTHROPIC_VERSION = '2023-06-01'

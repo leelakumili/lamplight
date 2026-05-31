@@ -104,7 +104,7 @@ Missing key → `503` (not a key leak). Client sends only the request body.
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#2a201a", "primaryTextColor": "#e9dfc9", "primaryBorderColor": "#c9a96e", "lineColor": "#c9a96e", "secondaryColor": "#1a1512", "background": "#1a1512", "mainBkg": "#2a201a", "nodeBorder": "#c9a96e", "fontFamily": "ui-serif, Georgia, serif"}}}%%
 flowchart TD
     A["Parent fills interview"] --> C
-    B["Teen picks theme"] --> C
+    B["Pre-teen/Teen picks theme"] --> C
     C["Build prompt\nprompt.ts"] --> D
     D["Call LLM\n/api/proxy/*\nup to 3 attempts"] --> E
     E{"Safety\ncheck"} -->|unsafe| D

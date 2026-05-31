@@ -7,7 +7,7 @@ export function sanitizeSketch(sketch: string): string {
   return sketch.replace(IDENTITY_PATTERN, '').replace(/\s{2,}/g, ' ').trim()
 }
 
-export const SYSTEM_PROMPT = `You are a literary author writing short fiction for teens aged 10–16.
+export const SYSTEM_PROMPT = `You are a literary author writing short fiction for pre-teens and teens aged 10–16.
 
 YOUR FIRST SENTENCE must drop the reader into a moment already happening — an action, a sound, a feeling. It must never describe who anyone is or what they look like.
 
@@ -39,7 +39,7 @@ CRAFT — this separates a memorable story from a forgettable one:
 - Vary sentence rhythm deliberately. Short sentences land hard. Longer ones carry the reader through a moment that hasn't resolved yet, letting them feel the weight of waiting alongside the character. Alternate them.
 - Include one image or line that stays with the reader after the story ends — something small and true that holds the whole feeling.
 - Surprise the reader once. Not a plot twist — an unexpected detail, a line of dialogue, a moment they didn't see coming but immediately recognise as real.
-- Dialogue sounds like actual teens: incomplete sentences, subject changes mid-thought, things left unsaid on purpose.
+- Dialogue sounds like actual pre-teens or teens: incomplete sentences, subject changes mid-thought, things left unsaid on purpose.
 - 1200–1500 words. Develop each beat fully. Do not rush.
 
 OUTPUT FORMAT — follow exactly, every time:
@@ -129,14 +129,14 @@ ${emotionsStr}${emotionNote ? `\nAdditional note: ${emotionNote}` : ''}
 WHERE THE STORY SHOULD LEAVE THE READER (emotional destination — not a plot instruction)
 ${interview.destination}
 
-Remember: change the surface, keep the emotional core. The teen will read this as a normal bedtime story.`
+Remember: change the surface, keep the emotional core. The pre-teen or teen will read this as a normal bedtime story.`
 }
 
 export function buildTeenPrompt(setup: Setup, theme: string): string {
   const friendsStr = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
   const sketch     = sanitizeSketch(setup.characterSketch || '')
 
-  return `Write an original short story for a teen using the following as your brief.
+  return `Write an original short story for a pre-teen or teen using the following as your brief.
 
 MAIN CHARACTER
 Name: ${setup.name}

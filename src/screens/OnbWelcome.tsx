@@ -88,7 +88,7 @@ export function OnbWelcome({ onBegin }: OnbWelcomeProps) {
           maxWidth: 320,
         }}
       >
-        Bedtime stories written for the teen in your life — quietly shaped around the day they actually had.
+        Bedtime stories written for the pre-teen or teen in your life — quietly shaped around the day they actually had.
       </p>
 
       {/* Buttons */}

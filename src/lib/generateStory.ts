@@ -3,12 +3,24 @@ import { sanitizeInput, checkSafetySmart } from './safety'
 import { getSystemPrompt, buildParentPrompt, buildTeenPrompt } from './prompt'
 import { MODELS } from './constants'
 
+// Returns a float from a Vite env var, or undefined if the var is absent/invalid.
+function parseEnvFloat(key: string): number | undefined {
+  const raw = (import.meta.env as Record<string, string | undefined>)[key]
+  if (raw === undefined || raw === '') return undefined
+  const n = parseFloat(raw)
+  return isNaN(n) ? undefined : n
+}
+
 // Words that prove a title is an incomplete sentence fragment.
 const TRAILING_CONNECTOR = /\b(and|or|but|the|a|an|of|in|on|at|to|for|with|by|from|that|which|this|its|their|his|her|our|your|my|as|if|when|where|while|though|although|because|since|until|unless|after|before|between|within|without|over|under|through|across|against|along|around|near|toward|upon|amid|despite|during|per|than|then|via)\s*[,.]?\s*$/i
+
+// "of a/an <noun>" at the end — dangling noun phrase, not a complete title.
+const DANGLING_OF_A = /\bof\s+an?\s+\w+\s*$/i
 
 function isTitleComplete(title: string, content: string): boolean {
   if (!title || title.trim().length < 2) return false
   if (TRAILING_CONNECTOR.test(title.trim())) return false
+  if (DANGLING_OF_A.test(title.trim())) return false
   const t = title.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 4).join(' ')
   const c = content.toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/).slice(0, 6).join(' ')
   if (t.length > 6 && c.startsWith(t)) return false
@@ -81,7 +93,19 @@ async function callOpenAI(system: string, user: string, signal?: AbortSignal): P
   return data.choices[0].message.content
 }
 
-async function callOllama(model: string, system: string, user: string, signal?: AbortSignal): Promise<string> {
+async function callOllama(
+  model: string,
+  system: string,
+  user: string,
+  signal?: AbortSignal,
+  opts: { minP?: number; temperature?: number; topK?: number; topP?: number } = {},
+): Promise<string> {
+  const options = {
+    ...(opts.minP        !== undefined && { min_p:       opts.minP }),
+    ...(opts.temperature !== undefined && { temperature: opts.temperature }),
+    ...(opts.topK        !== undefined && { top_k:       opts.topK }),
+    ...(opts.topP        !== undefined && { top_p:       opts.topP }),
+  }
   const res = await fetch('/api/proxy/ollama/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -90,6 +114,7 @@ async function callOllama(model: string, system: string, user: string, signal?: 
       model,
       stream: false,
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      ...(Object.keys(options).length > 0 && { options }),
     }),
   })
   if (res.status === 401) throw new Error('SESSION_EXPIRED')
@@ -105,7 +130,14 @@ async function callOllamaStreaming(
   onProgress: (ratio: number) => void,
   signal?: AbortSignal,
   targetWords = 1200,
+  opts: { minP?: number; temperature?: number; topK?: number; topP?: number } = {},
 ): Promise<string> {
+  const options = {
+    ...(opts.minP        !== undefined && { min_p:       opts.minP }),
+    ...(opts.temperature !== undefined && { temperature: opts.temperature }),
+    ...(opts.topK        !== undefined && { top_k:       opts.topK }),
+    ...(opts.topP        !== undefined && { top_p:       opts.topP }),
+  }
   const res = await fetch('/api/proxy/ollama/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -114,6 +146,7 @@ async function callOllamaStreaming(
       model,
       stream: true,
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      ...(Object.keys(options).length > 0 && { options }),
     }),
   })
   if (res.status === 401) throw new Error('SESSION_EXPIRED')
@@ -157,9 +190,15 @@ function callLLM(
   targetWords?: number,
 ): Promise<string> {
   if (setup.useLocal) {
+    const ollamaOpts = {
+      minP:        parseEnvFloat('VITE_OLLAMA_MIN_P'),
+      temperature: parseEnvFloat('VITE_OLLAMA_TEMPERATURE'),
+      topK:        parseEnvFloat('VITE_OLLAMA_TOP_K'),
+      topP:        parseEnvFloat('VITE_OLLAMA_TOP_P'),
+    }
     if (onProgress)
-      return callOllamaStreaming(setup.ollamaModel || MODELS.ollamaDefault, system, user, onProgress, signal, targetWords)
-    return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user, signal)
+      return callOllamaStreaming(setup.ollamaModel || MODELS.ollamaDefault, system, user, onProgress, signal, targetWords, ollamaOpts)
+    return callOllama(setup.ollamaModel || MODELS.ollamaDefault, system, user, signal, ollamaOpts)
   }
   if (setup.provider === 'claude')
     return callClaude(system, user, signal)
@@ -206,9 +245,13 @@ export async function generateStory(params: {
     if (wasFlagged) { interview = cleaned; params.onInputSanitized?.() }
   }
 
+  const diversify = import.meta.env.VITE_DIVERSIFY_PROMPTS !== 'false'
+  // Mix Date.now() into the seed so the same name+theme combination picks a
+  // different variation on every call instead of locking to one variant forever.
+  const variationSeed = diversify ? (Date.now() & 0xffffffff) : undefined
   const userPrompt = mode === 'parent' && interview
-    ? buildParentPrompt(setup, interview)
-    : buildTeenPrompt(setup, theme || 'Just somewhere else')
+    ? buildParentPrompt(setup, interview, { diversify, variationSeed })
+    : buildTeenPrompt(setup, theme || 'Just somewhere else', { diversify, variationSeed })
 
   const safetyOpts = { useLocal: setup.useLocal, provider: setup.provider }
 

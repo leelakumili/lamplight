@@ -364,6 +364,7 @@ graph LR
 | `OPENAI_API_KEY` | If using OpenAI | — | OpenAI API |
 | `OLLAMA_BASE_URL` | If using Ollama | `http://localhost:11434` | Ollama endpoint |
 | `ELEVENLABS_API_KEY` | If using Bella/Lily voices | — | ElevenLabs TTS — free tier at elevenlabs.io |
+| `VITE_DIVERSIFY_PROMPTS` | No | `true` | Set to `false` to disable prompt variation (A/B baseline). Omit for diversified prompts (default). |
 
 Only set keys for the providers you use. Others can be omitted.
 

@@ -45,7 +45,8 @@ CRAFT — this separates a memorable story from a forgettable one:
 OUTPUT FORMAT — follow exactly, every time:
 Line 1: The story title — 2 to 5 words. A complete, standalone phrase. Never a sentence fragment.
   GOOD: "The Weight of Afternoon" · "Something Borrowed" · "After Practice" · "What She Kept"
-  BAD:  "The scent of chlorine and" · "She had always been" · "A tangle of"
+  BAD (fragments): "The scent of chlorine and" · "She had always been" · "A tangle of"
+  BAD (overused sound/object pattern — never use these): "The Hum of the Dryer" · "The Hum of the Machines" · "The Hum of Anything" · "The Sound of the" · "The Noise of the" — avoid all "[The] [sound word] of the [object]" constructions entirely.
 Line 2: blank
 Line 3: blank
 Line 4 onward: the story text.
@@ -91,7 +92,8 @@ Format: ---\n*[niti line]*
 OUTPUT FORMAT — follow exactly:
 Line 1: The story title — 2 to 5 words. A complete phrase. Something that could be carved.
   GOOD: "The Weight of Still Water" · "What the Crow Remembered" · "Before the Second Rain" · "The Elder's Question"
-  BAD: "A tale of friendship and" · "When Avyanna the deer"
+  BAD (fragments): "A tale of friendship and" · "When Avyanna the deer"
+  BAD (overused sound/object pattern — never use): "The Hum of the River" · "The Sound of the Forest" — avoid all "[The] [sound word] of the [object]" constructions entirely.
 Line 2: blank
 Line 3: blank
 Line 4 onward: the story, then the niti.
@@ -101,14 +103,91 @@ export function getSystemPrompt(storyStyle: 'modern' | 'panchatantra'): string {
   return storyStyle === 'panchatantra' ? PANCHATANTRA_SYSTEM_PROMPT : SYSTEM_PROMPT
 }
 
-export function buildParentPrompt(setup: Setup, interview: ParentInterview): string {
+// ---------------------------------------------------------------------------
+// Variation pools — used by buildParentPrompt / buildTeenPrompt when
+// diversify = true. Changing these pools does not affect A/B baseline output.
+// ---------------------------------------------------------------------------
+
+const FRAMING_VARIANTS = [
+  'Use the following as source material — transform it into original fiction, do not retell it.',
+  'The details below are raw material. Reshape them entirely into original fiction — change the setting, the surface, everything except the emotional core.',
+  'What follows is context, not a script. Mine it for feeling and subtext, then write something wholly invented.',
+  'Treat the information below as a starting sketch. Translate it into fiction: new scene, new surface, same emotional truth.',
+  'The notes below describe something real. Your job is to disguise it completely — same feeling, different world.',
+]
+
+const STYLE_NUDGES = [
+  'This story should feel spare and taut — every sentence earned.',
+  'Let the world be loud and crowded. Fill the margins.',
+  'Write as if the reader is already half-asleep, and the story is pulling them back.',
+  'The pacing should feel unhurried, like a late afternoon with nowhere to be.',
+  'Keep the emotional register quiet — let the details carry the weight.',
+  'This one should have momentum. Sentences that move.',
+  'Write with restraint. The feeling should leak through the cracks, not be stated.',
+  'Let one small, odd detail anchor the whole story.',
+]
+
+// Sections that may be safely reordered in buildParentPrompt without losing meaning.
+// The anchor sections (MAIN CHARACTER, WHAT HAPPENED, DESTINATION) are always kept fixed.
+type ReorderableSection = 'friends' | 'who' | 'emotions'
+
+const SECTION_LABEL_VARIANTS: Record<ReorderableSection | 'friends_fixed' | 'who_fixed' | 'emotions_fixed', string[]> = {
+  friends:        ['FRIENDS IN THE STORY', 'SUPPORTING CHARACTERS', 'WHO ELSE IS IN THIS WORLD'],
+  friends_fixed:  ['FRIENDS WHO APPEAR IN THE STORY (use these names naturally — they are just names)'],
+  who:            ['WHO WAS THERE', 'WHO WAS INVOLVED', 'PEOPLE PRESENT'],
+  who_fixed:      ['WHO WAS INVOLVED'],
+  emotions:       ['HOW THE CHARACTER FELT', 'EMOTIONAL TEXTURE', 'WHAT WAS HAPPENING INSIDE'],
+  emotions_fixed: ['HOW THE CHARACTER FELT'],
+}
+
+// Minimal seedable LCG — no external deps, pure function.
+function seededRng(seed: number) {
+  let s = seed >>> 0
+  return () => {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0
+    return s / 0xffffffff
+  }
+}
+
+function pick<T>(arr: T[], rng: () => number): T {
+  return arr[Math.floor(rng() * arr.length)]
+}
+
+function shuffle<T>(arr: T[], rng: () => number): T[] {
+  const out = [...arr]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+// Derive a numeric seed from a story-id string so variation is reproducible.
+function seedFromId(id: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return h >>> 0
+}
+
+// ---------------------------------------------------------------------------
+
+export function buildParentPrompt(
+  setup: Setup,
+  interview: ParentInterview,
+  opts: { variationSeed?: number; diversify?: boolean } = {},
+): string {
+  const { diversify = true } = opts
   const emotionsStr = interview.emotions.length > 0 ? interview.emotions.join(', ') : 'unspecified'
   const friendsStr  = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
   const whoNote     = interview.whoNote?.trim() || interview.whoWasThere.join(', ') || 'unspecified'
   const emotionNote = interview.emotionNote?.trim() || ''
   const sketch      = sanitizeSketch(setup.characterSketch || '')
 
-  return `Use the following as source material — transform it into original fiction, do not retell it.
+  if (!diversify) {
+    return `Use the following as source material — transform it into original fiction, do not retell it.
 
 MAIN CHARACTER
 Name: ${setup.name}
@@ -130,13 +209,53 @@ WHERE THE STORY SHOULD LEAVE THE READER (emotional destination — not a plot in
 ${interview.destination}
 
 Remember: change the surface, keep the emotional core. The pre-teen or teen will read this as a normal bedtime story.`
+  }
+
+  const seed = opts.variationSeed ?? seedFromId(setup.name + emotionsStr)
+  const rng  = seededRng(seed)
+
+  const framing = pick(FRAMING_VARIANTS, rng)
+  const nudge   = pick(STYLE_NUDGES, rng)
+
+  const friendsLabel   = pick(SECTION_LABEL_VARIANTS.friends, rng)
+  const whoLabel       = pick(SECTION_LABEL_VARIANTS.who, rng)
+  const emotionsLabel  = pick(SECTION_LABEL_VARIANTS.emotions, rng)
+
+  const friendsBlock  = `${friendsLabel}\n${friendsStr}`
+  const whoBlock      = `${whoLabel}\n${whoNote}`
+  const emotionsBlock = `${emotionsLabel}\n${emotionsStr}${emotionNote ? `\nAdditional note: ${emotionNote}` : ''}`
+
+  const reorderable = shuffle<string>([friendsBlock, whoBlock, emotionsBlock], rng)
+
+  return `${framing}
+
+MAIN CHARACTER
+Name: ${setup.name}
+${sketch ? `Personality / details (use sparingly for texture, never as identity markers): ${sketch}` : ''}
+
+WHAT HAPPENED (this is private parent context — reshape it entirely, do not quote or paraphrase it)
+${interview.moment}
+
+${reorderable.join('\n\n')}
+
+WHERE THE STORY SHOULD LEAVE THE READER (emotional destination — not a plot instruction)
+${interview.destination}
+
+Remember: change the surface, keep the emotional core. The pre-teen or teen will read this as a normal bedtime story.
+${nudge}`
 }
 
-export function buildTeenPrompt(setup: Setup, theme: string): string {
+export function buildTeenPrompt(
+  setup: Setup,
+  theme: string,
+  opts: { variationSeed?: number; diversify?: boolean } = {},
+): string {
+  const { diversify = true } = opts
   const friendsStr = setup.friends.length > 0 ? setup.friends.join(', ') : 'none'
   const sketch     = sanitizeSketch(setup.characterSketch || '')
 
-  return `Write an original short story for a pre-teen or teen using the following as your brief.
+  if (!diversify) {
+    return `Write an original short story for a pre-teen or teen using the following as your brief.
 
 MAIN CHARACTER
 Name: ${setup.name}
@@ -152,4 +271,30 @@ EMOTIONAL DESTINATION
 A warm, quiet resolution. The character doesn't solve the problem — they find a way to hold it differently.
 
 Write 1200–1500 words. Develop each scene fully. Do not rush. The story should feel pulled from a shelf — textured, specific, real. No moralizing.`
+  }
+
+  const seed = opts.variationSeed ?? seedFromId(setup.name + theme)
+  const rng  = seededRng(seed)
+
+  const framing      = pick(FRAMING_VARIANTS, rng)
+  const nudge        = pick(STYLE_NUDGES, rng)
+  const friendsLabel = pick(SECTION_LABEL_VARIANTS.friends, rng)
+
+  return `${framing}
+
+MAIN CHARACTER
+Name: ${setup.name}
+${sketch ? `Personality / details (use as light texture only, never as identity labels): ${sketch}` : ''}
+
+${friendsLabel}
+${friendsStr}
+
+EMOTIONAL THEME (do not name this theme in the story — let the situation carry it)
+${theme}
+
+EMOTIONAL DESTINATION
+A warm, quiet resolution. The character doesn't solve the problem — they find a way to hold it differently.
+
+Write 1200–1500 words. Develop each scene fully. Do not rush. The story should feel pulled from a shelf — textured, specific, real. No moralizing.
+${nudge}`
 }
